@@ -313,7 +313,14 @@ namespace IsolineEditing
 					adjF.Add(index);
 			}
 
-			public int PQIndex
+            public VertexRecord(double[] pos, int vIndex, Set<int> adj)
+            {
+                this.pos = new Vector3d(pos);
+                this.vIndex = vIndex;
+                this.adjV = adj;
+            }
+
+            public int PQIndex
 			{
 				get { return pqIndex; }
 				set { pqIndex = value; }
@@ -385,8 +392,9 @@ namespace IsolineEditing
 		private float skeletonNodeSize = 6.0f;
 		private bool displayIntermediateMesh = false;
 		private int remainingVertexCount = 0;
+        private bool displayPostProcessSkeleton = false;
 
-		public bool DisplaySkeleton
+        public bool DisplaySkeleton
 		{
 			get { return displaySkeleton; }
 			set { displaySkeleton = value; }
@@ -481,6 +489,10 @@ namespace IsolineEditing
 			if (opt.UseIterativeSolver)
 				this.multigridSolver = new MultigridContractionSolver(mesh);
 		}
+        public Skeletonizer(StreamReader sr,Mesh ms)
+        {
+            ReadSkeleton(sr,ms);
+        }
 		~Skeletonizer()
 		{
 			Dispose();
@@ -530,7 +542,9 @@ namespace IsolineEditing
             {
                 List<Vector3d> nodePosL = new List<Vector3d>();
                 List<Set<int>> setl = new List<Set<int>>();
-                int[] fg = new int[vRec.Length];                
+                int[] fg;
+                if (vRec == null) fg = new int[simplifiedVertexRec.Count];
+                else fg = new int[vRec.Length];                
                 for (int i = 0; i < simplifiedVertexRec.Count; i++)   // 输入rets的点集信息
                 {
                     nodePosL.Add(simplifiedVertexRec[i].pos);  // struct 不需要深复制
@@ -562,7 +576,7 @@ namespace IsolineEditing
 		{
 			lock (this)
 			{
-				if (displaySkeleton && simplifiedVertexRec != null)
+				if (displaySkeleton && simplifiedVertexRec != null && vRec != null)
 				{
 					DrawSimplifiedVertices();
 				}
@@ -582,7 +596,7 @@ namespace IsolineEditing
 					// 					displaySimplifiedMeshIndex--;
 					// 				}
 				}
-
+                if (displayPostProcessSkeleton && simplifiedVertexRec != null) DrawSimplifiedVertices2();
 				if (displayIntermediateMesh && vRec != null)
 				{
 					DrawIntermediateMesh();
@@ -605,14 +619,38 @@ namespace IsolineEditing
 			foreach (VertexRecord rec in simplifiedVertexRec)
 			{
 				string s = rec.pos.x + " " + rec.pos.y + " " + rec.pos.z;
-				foreach (int adj in rec.adjV)
-					s += " " + map[adj];
-				sw.WriteLine(s);
+                s += " " + map[rec.vIndex];
+                foreach (int adj in rec.adjV)
+                    s += " " + map[adj];
+                sw.WriteLine(s);
 			}
 		}
-        public void ReadSkeleton(StreamReader sr)
+        public void ReadSkeleton(StreamReader sr,Mesh ms)
         {
-
+            char[] delimiters = { ' ', '\t' };
+            string s = "";
+            s = sr.ReadLine();
+            int nodenum = Int32.Parse(s);
+            this.simplifiedVertexRec = new List<VertexRecord>();
+            this.displaySkeleton = false;
+            this.displayPostProcessSkeleton = true;
+            while (sr.Peek() > -1)
+            {
+                s = sr.ReadLine();
+                string[] tokens = s.Split(delimiters);
+                double[] pos = new double[3];
+                Set<int> adj = new Set<int>(4);
+                for(int i =0;i<3;i++)
+                {
+                    pos[i] = Double.Parse(tokens[i]);
+                }
+                int vIndex = Int32.Parse(tokens[3]);
+                for(int i =4; i< tokens.Length; i++)
+                {
+                    adj.Add(Int32.Parse(tokens[i]));
+                }
+                this.simplifiedVertexRec.Add(new VertexRecord(pos, vIndex, adj));
+            }
         }
 
 		public void WriteSegmentation(StreamWriter sw)
@@ -2529,7 +2567,46 @@ namespace IsolineEditing
 			}
 			GL.glEnd();
 		}
-		private void DrawNodeSphere()
+        private void DrawSimplifiedVertices2()
+        {
+            foreach (VertexRecord rec in simplifiedVertexRec)
+            {
+                // 				switch (rec.colorIndex)
+                // 				{
+                // 					case 0: GL.glColor3f(0.0f, 1.0f, 0.0f); break;
+                // 					case 1: GL.glColor3f(1.0f, 0.0f, 0.0f); break;
+                // 					case 2: GL.glColor3f(0.0f, 0.0f, 1.0f); break;
+                // 				}
+                GL.glPointSize(skeletonNodeSize);
+                if (rec.flag == (byte)1) GL.glColor3f(0.0f, 1.0f, 0.0f);
+                else GL.glColor3f(1.0f, 0.0f, 0.0f);
+                GL.glBegin(GL.GL_POINTS);
+                GL.glVertex3d(rec.pos.x, rec.pos.y, rec.pos.z);
+                GL.glEnd();
+            }
+            /*
+						GL.glColor3f(0.0f, 0.8f, 0.0f);
+						foreach (VertexRecord rec in simplifiedVertexRec)
+						{
+							if (rec.adjV.Count > 2)
+								Program.Print3DText(rec.pos, "  " + rec.nodeSize.ToString());
+						}
+			*/
+            GL.glColor3f(0.0f, 0.0f, 1.0f);
+            GL.glLineWidth(2.0f);
+            GL.glBegin(GL.GL_LINES);
+            foreach (VertexRecord rec in simplifiedVertexRec)
+            {
+                foreach (int adj in rec.adjV)
+                {
+                    VertexRecord rec2 = simplifiedVertexRec[adj];
+                    GL.glVertex3d(rec.pos.x, rec.pos.y, rec.pos.z);
+                    GL.glVertex3d(rec2.pos.x, rec2.pos.y, rec2.pos.z);
+                }
+            }
+            GL.glEnd();
+        }
+        private void DrawNodeSphere()
 		{
 			GL.glEnable(GL.GL_LIGHTING);
 			GL.glEnable(GL.GL_NORMALIZE);

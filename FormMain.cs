@@ -438,11 +438,15 @@ namespace IsolineEditing
 
             DialogResult ret = openFileDialog1.ShowDialog(this);
 
-            if (ret == DialogResult.OK)
+            if (ret == DialogResult.OK && currentMeshRecord !=null)
             {
                 StreamReader sr = new StreamReader(openFileDialog1.FileName);
-                currentMeshRecord.Skeletonizer.ReadSkeleton(sr);
+                if(currentMeshRecord.Skeletonizer == null)
+                     currentMeshRecord.Skeletonizer = new Skeletonizer(sr, currentMeshRecord.Mesh);
+                else currentMeshRecord.Skeletonizer.ReadSkeleton(sr, currentMeshRecord.Mesh);
                 sr.Close();
+                Program.displayProperty.MeshDisplayMode = DisplayProperty.EnumMeshDisplayMode.TransparentSmoothShaded;
+                this.meshView1.Refresh();
                 PrintText("Read skeleton " + openFileDialog1.FileName + "\n");
             }
         }

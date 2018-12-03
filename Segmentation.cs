@@ -107,27 +107,13 @@ namespace IsolineEditing
         public Segmentation(Skeletonizer skel, Mesh currmesh)
         {
             segMesh = currmesh;
-            int numSkSeq = 60; // 骨架的分段数量
+            int numSkSeq = 40; // 骨架的分段数量
             if (skel != null)
             {
                 skeRcd = skel.ReturnSkeleton(); // get skeleton from sig08
                 interval = (double)skeRcd.skeLength/numSkSeq;
                 SkeletonRefining(interval);   // refine
                 SegmentToPart();      //get partskelseq
-                bodypart[] bdparr = (bodypart[])Enum.GetValues(typeof(bodypart));
-                //for (int i = 0; i < (int)bodypart.PartCount; i++)
-                //{
-                    
-                //    int n = (int)bodypart.Torso == i ? 15 : 5;
-                //    List < SlicerRecord > slicerSeq;
-                //    bodypart bdt = bdparr[i];
-                //    CreateSlicerSequence(bdt, interval, out slicerSeq);
-                //    // debug 
-                    
-                //    List<SlicerRecordUniform> radialSlicer = RadialSlicerCut(slicerSeq, n);
-                //    WriteToSlicFile(radialSlicer, bdt);
-                //} 
-                
             }
         }
 
@@ -171,27 +157,31 @@ namespace IsolineEditing
         }
         private void SkeletonRefining(double interval)
         {
-            SkeletonDensify(interval/3);    // 尽量紧密一点
-            //SkeletonSmoothing(3);
+            SkeletonDensify(interval/6);    // 尽量紧密一点
+            SkeletonSmoothing(4);
         }
         private void SkeletonSmoothing(int times)
         {
             int loop = 0;
+             
             while (loop < times)
             {
+                List<Vector3d> temp = new List<Vector3d>(skeRcd.nodePosList.ToArray());
                 for (int i = 0; i < skeRcd.nodePosList.Count; i++)
                 {
                     int adjCount = skeRcd.adjVV[i].Count;
                     if (adjCount > 1)
                     {
-                        skeRcd.nodePosList[i] = skeRcd.nodePosList[i] - skeRcd.nodePosList[i];
+                        temp[i] = new Vector3d();
+                        int[] adjv = skeRcd.adjVV[i].ToArray();
                         for (int j = 0; j < adjCount; j++)
                         {
-                            int curradj = skeRcd.adjVV[i].ElementAt(j);
-                            skeRcd.nodePosList[i] = skeRcd.nodePosList[i] + skeRcd.nodePosList[curradj] / adjCount;
+                            int curradj = adjv[j];
+                            temp[i] += skeRcd.nodePosList[curradj] / adjCount;
                         }
                     }
                 }
+                skeRcd.nodePosList = temp;
                 loop++;
             }
         }
@@ -222,17 +212,17 @@ namespace IsolineEditing
                         #region expand the skeleton fragment
                         double leng = (skeRcd.nodePosList[cur]-skeRcd.nodePosList[adjv_num]).Length();
                         int numDensity = (int)(leng / interval);
-                        if (numDensity < 2) continue;
+                        if (numDensity == 0) continue;
                         else
                         {
                             List<int> fragSkeindexlist = new List<int>();
                             fragSkeindexlist.Add(cur);
                             int curSkeCount = skeRcd.nodePosList.Count;  // initial index of current progress
-                            for (int j = 1; j < numDensity; j++)     // 从第二个点开始
+                            for (int j = 1; j <= numDensity; j++)     // 从第二个点开始
                             {
                                 fragSkeindexlist.Add(curSkeCount);
-                                skeRcd.nodePosList.Add(j * interval / leng * (skeRcd.nodePosList[cur]) +
-                                                     (1 - j * interval / leng) * (skeRcd.nodePosList[adjv_num]));
+                                skeRcd.nodePosList.Add((1 - j * interval / leng) * (skeRcd.nodePosList[cur]) +
+                                                     j * interval / leng * (skeRcd.nodePosList[adjv_num]));
                                 updateAdjVV.Add(new Set<int>());
                                 curSkeCount++;
                             }
@@ -258,7 +248,6 @@ namespace IsolineEditing
             // debug
             bool s = Checkchest(updateAdjVV);
         }
-
         public void DisplayRefinedSkeleton()
         {
             // debug 
@@ -459,9 +448,6 @@ namespace IsolineEditing
                 }
             }
         }
-
-
-
         // 把这个当作主要的处理函数
         public void CreateSlicerSequence(bodypart bdt, double interval, out List<SlicerRecord> slicerSeq) 
         {

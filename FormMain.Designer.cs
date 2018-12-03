@@ -120,7 +120,7 @@ namespace IsolineEditing
             this.toolStripButtonExit});
             this.toolStrip1.Location = new System.Drawing.Point(3, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(930, 27);
+            this.toolStrip1.Size = new System.Drawing.Size(532, 27);
             this.toolStrip1.TabIndex = 2;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -220,6 +220,7 @@ namespace IsolineEditing
             this.toolStripButton2.Name = "toolStripButton2";
             this.toolStripButton2.Size = new System.Drawing.Size(151, 24);
             this.toolStripButton2.Text = "Extract Skeleton";
+            this.toolStripButton2.Visible = false;
             this.toolStripButton2.Click += new System.EventHandler(this.toolStripSplitButtonSkeletonization_ButtonClick);
             // 
             // toolStripButtonOpenSkeleton
@@ -536,7 +537,7 @@ namespace IsolineEditing
             this.tabPageDisplay.Margin = new System.Windows.Forms.Padding(4);
             this.tabPageDisplay.Name = "tabPageDisplay";
             this.tabPageDisplay.Padding = new System.Windows.Forms.Padding(4);
-            this.tabPageDisplay.Size = new System.Drawing.Size(355, 491);
+            this.tabPageDisplay.Size = new System.Drawing.Size(364, 505);
             this.tabPageDisplay.TabIndex = 1;
             this.tabPageDisplay.Text = "Display";
             this.tabPageDisplay.UseVisualStyleBackColor = true;
@@ -548,7 +549,7 @@ namespace IsolineEditing
             this.propertyGridDisplay.Location = new System.Drawing.Point(4, 4);
             this.propertyGridDisplay.Margin = new System.Windows.Forms.Padding(4);
             this.propertyGridDisplay.Name = "propertyGridDisplay";
-            this.propertyGridDisplay.Size = new System.Drawing.Size(347, 483);
+            this.propertyGridDisplay.Size = new System.Drawing.Size(356, 497);
             this.propertyGridDisplay.TabIndex = 0;
             // 
             // openFileDialog1

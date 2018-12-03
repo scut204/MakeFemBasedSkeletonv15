@@ -115,6 +115,13 @@ namespace MyGeometry
 
 		public double x, y, z;
 
+
+        public Vector3d(double[] pos)
+        {
+            this.x = pos[0];
+            this.y = pos[1];
+            this.z = pos[2];
+        }
 		public Vector3d(double x, double y, double z)
 		{
 			this.x = x;
