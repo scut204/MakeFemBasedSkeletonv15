@@ -1,0 +1,15 @@
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\bin\Debug\csgl.dll
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\bin\Debug\csgl.native.dll
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\bin\Debug\taucs.dll
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\bin\Debug\Skeleton Extraction Demo.exe.config
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\bin\Debug\Skeleton Extraction Demo.exe
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\bin\Debug\Skeleton Extraction Demo.pdb
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\obj\Debug\IsolineEditing.AboutBox1.resources
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\obj\Debug\IsolineEditing.FormInput.resources
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\obj\Debug\IsolineEditing.FormMain.resources
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\obj\Debug\IsolineEditing.Properties.Resources.resources
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\obj\Debug\Skeleton Extraction Demo.csproj.GenerateResource.cache
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\obj\Debug\Skeleton Extraction Demo.csproj.CoreCompileInputs.cache
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\obj\Debug\Skeleton Extraction Demo.csproj.CopyComplete
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\obj\Debug\Skeleton Extraction Demo.exe
+W:\Csharp\W_csharp\Skeleton Extraction Demo - 副本\obj\Debug\Skeleton Extraction Demo.pdb

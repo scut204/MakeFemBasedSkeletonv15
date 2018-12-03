@@ -1,0 +1,104 @@
+<HTML>
+<HEAD>
+<TITLE>
+OpenGLException.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> CsGL.Util;
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Text;
+<font color="blue">using</font> System.Runtime.InteropServices;
+
+<font color="blue">namespace</font> CsGL.OpenGL
+<font color="black">{</font>
+    <font color="green">/// &#60;summary&#62;</font>
+    <font color="green">/// standart error for 3D exception which, though rare, could</font>
+    <font color="green">/// occur, generaly in some init process.</font>
+    <font color="green">/// the definitive way to use it is through its 'Assert()' method</font>
+    <font color="green">/// &#60;/summary&#62;</font>
+    <font color="black">[</font>Serializable<font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">class</font> OpenGLException <font color="black">:</font> NativeException
+    <font color="black">{</font>
+        <font color="blue">public</font> OpenGLException<font color="black">(</font><font color="blue">uint</font> id<font color="black">)</font> <font color="black">:</font> <font color="blue">base</font><font color="black">(</font><font color="black">(</font><font color="blue">int</font><font color="black">)</font>id, GL.gluErrorString<font color="black">(</font>id<font color="black">)</font><font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+        <font color="blue">public</font> OpenGLException<font color="black">(</font>string msg<font color="black">)</font> <font color="black">:</font> <font color="blue">base</font><font color="black">(</font><font color="black">(</font><font color="blue">int</font><font color="black">)</font>GL.GL_NO_ERROR, msg<font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">override</font> string ToString<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">return</font> GetType<font color="black">(</font><font color="black">)</font>.Name<font color="black">+</font><font color="marooon">'('</font><font color="black">+</font>ID<font color="black">+</font><font color="marooon">"): "</font><font color="black">+</font>Message;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// test an error in OpenGL engine and throw an OpenGLException </font>
+        <font color="green">/// with a comprehensive string error message if one is found.</font>
+        <font color="green">/// Though it mask its parent method (NativeException.Assert())</font>
+        <font color="green">/// it doesn't check its parent's method</font>
+        <font color="green">/// &#60;/summary&#62; </font>
+        <font color="blue">public</font> <font color="blue">new</font> <font color="blue">static</font> <font color="blue">void</font> Assert<font color="black">(</font><font color="black">)</font> 
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>OpenGLContext.Current <font color="black">=</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font>
+                <font color="blue">return</font>;
+            
+            <font color="green">// test OpenGL engine ...</font>
+            <font color="blue">uint</font> err <font color="black">=</font> GL.glGetError<font color="black">(</font><font color="black">)</font>;
+            <font color="blue">if</font><font color="black">(</font>err <font color="black">!</font><font color="black">=</font> GL.GL_NO_ERROR<font color="black">)</font>
+                <font color="blue">throw</font> <font color="blue">new</font> OpenGLException<font color="black">(</font>err<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> Check<font color="black">(</font><font color="black">)</font> <font color="black">{</font> Check<font color="black">(</font><font color="marooon">"error"</font><font color="black">)</font>; <font color="black">}</font>
+        <font color="green">/** test if there is a GL error. and just print it in the error 
+         * stream if one is found. */</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> Check<font color="black">(</font>string msg<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>OpenGLContext.Current <font color="black">=</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font>
+                <font color="blue">return</font>;
+            
+            <font color="green">// test OpenGL engine ...</font>
+            <font color="blue">uint</font> err <font color="black">=</font> GL.glGetError<font color="black">(</font><font color="black">)</font>;
+            <font color="blue">if</font><font color="black">(</font>err <font color="black">!</font><font color="black">=</font> GL.GL_NO_ERROR<font color="black">)</font> <font color="black">{</font>
+                string s <font color="black">=</font> GL.gluErrorString<font color="black">(</font>err<font color="black">)</font>;
+                Console.WriteLine<font color="black">(</font>msg <font color="black">+</font> <font color="marooon">" - "</font><font color="black">+</font>err<font color="black">+</font><font color="marooon">" - "</font><font color="black">+</font>s<font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

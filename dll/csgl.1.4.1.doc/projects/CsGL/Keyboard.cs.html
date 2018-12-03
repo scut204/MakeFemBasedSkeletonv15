@@ -1,0 +1,216 @@
+<HTML>
+<HEAD>
+<TITLE>
+Keyboard.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Collections;
+<font color="blue">using</font> System.Runtime.InteropServices;
+<font color="blue">using</font> System.Text;
+<font color="blue">using</font> System.Windows.Forms;
+
+<font color="blue">namespace</font> CsGL.Util
+<font color="black">{</font>
+    <font color="green">/**
+     * This class gather information about keyboard state. unlike 
+     * OnKeySomething method they are accurate and could be accessed
+     * from anywhere in the application (not only from a Control).
+     * &#60;p/&#62;
+     * the bool[] array returned by some function contain the state
+     * (pressed or not of the key) you use it like this:&#60;br&#62;
+     * &nbsp; &#60;tt&#62;bool isPScreen = Keyboard.GetKeysState()[(int)Keys.Snapshot]&#60;/tt&#62;, or&#60;br/&#62;
+     * &nbsp; &#60;tt&#62;bool isPScreen = Keyboard.IsKeyPressed(Keys.Snapshot)&#60;/tt&#62;
+     * &#60;p/&#62;
+     * The static methods IsKeyPressed & GetKeysState could safely
+     * be assumed to be portable. I am not sure of the same for
+     * instance and AddListener methods. but they require less 
+     * calculation than GetKeysState(). Beside some key are 
+     * incorrectly reported in Keyboard instances and in the hook
+     * 
+     * @see Hook
+     */</font>
+    <font color="blue">public</font> <font color="blue">class</font> Keyboard <font color="black">:</font> CsGL.OSLib
+    <font color="black">{</font>
+        <font color="green">/**
+         * return wether or not a given key is pressed
+         */</font>
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_kb_getKeyState"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">bool</font> IsKeyPressed<font color="black">(</font>Keys k<font color="black">)</font>;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">unsafe</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> csgl_kb_getKeyArrayState<font color="black">(</font><font color="blue">byte</font><font color="black">*</font> kbArray<font color="black">)</font>;
+        
+        
+        <font color="green">/**
+         * take an array of bool[256]. fill it with a boolean
+         * stating if the given virtual key is pressed or not.&#60;br&#62;
+         * to know if a given key is pressed just do that:&#60;br/&#62;
+         */</font>
+        <font color="blue">public</font> <font color="blue">unsafe</font> <font color="blue">static</font> <font color="blue">void</font> GetKeysState<font color="black">(</font><font color="blue">bool</font><font color="black">[</font><font color="black">]</font> state<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">byte</font><font color="black">*</font> ret <font color="black">=</font> <font color="blue">stackalloc</font> <font color="blue">byte</font><font color="black">[</font><font color="maroon">256</font><font color="black">]</font>;
+            csgl_kb_getKeyArrayState<font color="black">(</font>ret<font color="black">)</font>;
+            <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> i<font color="black">=</font><font color="maroon">0</font>; i<font color="black">&#60;</font><font color="maroon">256</font>; i<font color="black">+</font><font color="black">+</font><font color="black">)</font>
+                state<font color="black">[</font>i<font color="black">]</font> <font color="black">=</font> <font color="black">(</font>ret<font color="black">[</font>i<font color="black">]</font><font color="black">&</font><font color="maroon">0xF0</font><font color="black">)</font> <font color="black">!</font><font color="black">=</font> <font color="maroon">0</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/** return an array of bool wich is true if the given 
+         * key is pressed.
+         */</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">bool</font><font color="black">[</font><font color="black">]</font> GetKeysState<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">bool</font><font color="black">[</font><font color="black">]</font> ret <font color="black">=</font> <font color="blue">new</font> <font color="blue">bool</font><font color="black">[</font><font color="maroon">256</font><font color="black">]</font>;
+            GetKeysState<font color="black">(</font>ret<font color="black">)</font>;
+            <font color="blue">return</font> ret;
+        <font color="black">}</font>
+        
+        <font color="green">// -------- HOOK & listeners --------</font>
+        <font color="blue">public</font> <font color="blue">enum</font> KeyState <font color="black">:</font> <font color="blue">byte</font>
+        <font color="black">{</font>
+            <font color="green">/** nearly each key down generate 1 */</font>
+            DOWN  <font color="black">=</font> <font color="maroon">0</font>,
+            <font color="green">/** each key up generate 1 */</font>
+            UP <font color="black">=</font> <font color="maroon">1</font>,
+            <font color="green">/** nearly each key down generate 1 or more (could be repeated) */</font>
+            TYPED <font color="black">=</font> <font color="maroon">2</font>
+        <font color="black">}</font>
+        <font color="black">[</font>StructLayout<font color="black">(</font>LayoutKind.Sequential<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">struct</font> Event
+        <font color="black">{</font>
+            <font color="green">/** the type of event */</font>
+            <font color="blue">public</font> KeyState state;
+            <font color="green">/** the key of the event */</font>
+            <font color="blue">public</font> Keys key; 
+            <font color="green">/** the currently foused window handle */</font>
+            <font color="blue">private</font> IntPtr hwnd;
+            
+            <font color="green">/** the control owning the focus */</font>
+            <font color="blue">public</font> Control Control
+            <font color="black">{</font>
+                <font color="blue">get</font> <font color="black">{</font> 
+                    <font color="blue">if</font><font color="black">(</font>hwnd<font color="black">=</font><font color="black">=</font>IntPtr.Zero<font color="black">)</font>
+                        <font color="blue">return</font> <font color="blue">null</font>;
+                    <font color="blue">return</font> Control.FromHandle<font color="black">(</font>hwnd<font color="black">)</font>;
+                <font color="black">}</font>
+            <font color="black">}</font>
+            <font color="blue">public</font> <font color="blue">override</font> string ToString<font color="black">(</font><font color="black">)</font>
+            <font color="black">{</font>
+                StringBuilder sb <font color="black">=</font> <font color="blue">new</font> StringBuilder<font color="black">(</font><font color="black">)</font>;
+                sb.Append<font color="black">(</font><font color="marooon">"Key+Event("</font><font color="black">)</font>;
+                sb.Append<font color="black">(</font>state<font color="black">)</font>;
+                sb.Append<font color="black">(</font><font color="marooon">' '</font><font color="black">)</font>;
+                sb.Append<font color="black">(</font>key<font color="black">)</font>;
+                Control c <font color="black">=</font> Control;
+                <font color="blue">if</font><font color="black">(</font>c<font color="black">!</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font> <font color="black">{</font>
+                    sb.Append<font color="black">(</font><font color="marooon">' '</font><font color="black">)</font>;
+                    sb.Append<font color="black">(</font><font color="marooon">'@'</font><font color="black">)</font>;
+                    sb.Append<font color="black">(</font>Control<font color="black">)</font>;
+                <font color="black">}</font>
+                sb.Append<font color="black">(</font><font color="marooon">')'</font><font color="black">)</font>;
+                <font color="blue">return</font> sb.ToString<font color="black">(</font><font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        <font color="green">/** call this callback function anytime a key event occur.
+         * some key doesn't work very well, like PrintScreen which
+         * is called only on KeyUp.... but IsKeyPressed give accurate
+         * values */</font>
+        <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> Hook<font color="black">(</font>Event e<font color="black">)</font>;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> csgl_kb_setHook<font color="black">(</font>Hook fct<font color="black">)</font>;
+
+        <font color="blue">static</font> ArrayList hooks;
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> AddListener<font color="black">(</font>Hook fct<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>hooks<font color="black">=</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font> <font color="black">{</font>
+                CSGLInit<font color="black">(</font><font color="black">)</font>;
+                hooks <font color="black">=</font> <font color="blue">new</font> ArrayList<font color="black">(</font><font color="black">)</font>;
+                kbHook <font color="black">=</font> <font color="blue">new</font> Hook<font color="black">(</font>SysHook<font color="black">)</font>;
+                csgl_kb_setHook<font color="black">(</font>kbHook<font color="black">)</font>;
+            <font color="black">}</font>
+            hooks.Add<font color="black">(</font>fct<font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> RemoveListener<font color="black">(</font>Hook fct<font color="black">)</font> 
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>hooks<font color="black">!</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font>
+                hooks.Remove<font color="black">(</font>fct<font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="blue">private</font> <font color="blue">static</font> Hook kbHook;
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> SysHook<font color="black">(</font>Event e<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">foreach</font><font color="black">(</font>Hook h <font color="blue">in</font> hooks<font color="black">)</font>
+                try <font color="black">{</font> h<font color="black">(</font>e<font color="black">)</font>; <font color="black">}</font>
+                <font color="blue">catch</font><font color="black">(</font>Exception ex<font color="black">)</font> <font color="black">{</font>
+                    Console.Error.WriteLine<font color="black">(</font>ex<font color="black">)</font>;
+                    Console.Error.WriteLine<font color="black">(</font>ex.StackTrace<font color="black">)</font>;
+                <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">// ---------- INSTANCE methods ----------</font>
+        <font color="blue">private</font> <font color="blue">void</font> spyKey<font color="black">(</font>Event e<font color="black">)</font> 
+        <font color="black">{</font> 
+            State<font color="black">[</font><font color="black">(</font><font color="blue">int</font><font color="black">)</font>e.key<font color="black">]</font> <font color="black">=</font> e.state <font color="black">!</font><font color="black">=</font> KeyState.UP;
+            KeyStateChanged<font color="black">(</font>e<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/** override this method to do something after a key event.
+         * could be a right place to test KeyUp on PrintScreen key... */</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> KeyStateChanged<font color="black">(</font>Event e<font color="black">)</font> <font color="black">{</font><font color="black">}</font>
+        
+        <font color="blue">public</font> Keyboard<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            AddListener<font color="black">(</font><font color="blue">new</font> Hook<font color="black">(</font>spyKey<font color="black">)</font><font color="black">)</font>;
+        <font color="black">}</font>
+        ~Keyboard<font color="black">(</font><font color="black">)</font> <font color="black">{</font> RemoveListener<font color="black">(</font><font color="blue">new</font> Hook<font color="black">(</font>spyKey<font color="black">)</font><font color="black">)</font>; <font color="black">}</font>
+        
+        <font color="green">/** usefull if your application lost focus. call it every 
+         * time after a gain focus..  */</font>
+        <font color="blue">public</font> <font color="blue">void</font> Reset<font color="black">(</font><font color="black">)</font> <font color="black">{</font> state <font color="black">=</font> <font color="blue">null</font>; <font color="black">}</font>
+        <font color="blue">private</font> <font color="blue">bool</font><font color="black">[</font><font color="black">]</font> state;
+        <font color="blue">public</font> <font color="blue">bool</font><font color="black">[</font><font color="black">]</font> State <font color="black">{</font> 
+            <font color="blue">get</font> <font color="black">{</font> 
+                <font color="blue">if</font><font color="black">(</font>state<font color="black">=</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font>
+                    state <font color="black">=</font> GetKeysState<font color="black">(</font><font color="black">)</font>;
+                <font color="blue">return</font> state; 
+            <font color="black">}</font>
+        <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

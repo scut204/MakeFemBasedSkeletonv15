@@ -1,0 +1,342 @@
+<HTML>
+<HEAD>
+<TITLE>
+GDITextureFont.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net),
+ * The CsGL Development Team
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the The CsGL Development Team nor the names of its 
+ * contributors may be used to endorse or promote products derived from this 
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Diagnostics;
+<font color="blue">using</font> System.Runtime.Serialization;
+<font color="blue">using</font> System.Text;
+<font color="blue">using</font> System.Runtime.InteropServices;
+<font color="blue">using</font> System.Windows.Forms;
+<font color="blue">using</font> System.Drawing;
+<font color="blue">using</font> System.Drawing.Imaging;
+
+<font color="blue">namespace</font> CsGL.OpenGL
+<font color="black">{</font>
+    <font color="black">[</font>Serializable<font color="black">]</font>
+    <font color="green">/**
+     * Create a 3D font from a System.Drawing.Font object. For this
+     * it generate on the fly a texture with the desired list of
+     * character and generate a display list whose character number should
+     * display the related part of the texture. &#60;br&#62;
+     * This font could be writte at any point in the space with
+     * any current projection, it's a simple way to do simple task
+     * with a strings&#60;br&#62;
+     * You could choose is color with a call to glColorXX()
+     * &#60;p&#62;
+     * It could be a good idea to draw string with this font as you do
+     * for transparent object. That is, if you follow OpenGL red book advice,
+     * on a second pass, with all transparent object and with the depth buffer
+     * in read-only mode with: &#60;b&#62;glDepthMask(&#60;/b&#62;&#60;i&#62;GL_FALSE&#60;/i&#62;&#60;b&#62;)&#60;/b&#62;
+     * &#60;p&#62;
+     * Anyway, ultimately, to make some nice 3D font effect, you should 
+     * draw to a picture and use the picture as a texture.
+     */</font>
+    <font color="blue">public</font> <font color="blue">class</font> GDITextureFont <font color="black">:</font> OpenGLFont
+    <font color="black">{</font>
+        OpenGLTexture2D texture;
+
+        <font color="green">// font info</font>
+        <font color="blue">char</font><font color="black">[</font><font color="black">]</font> displayed;
+        <font color="blue">float</font> fwidth, fheight;
+        <font color="blue">float</font><font color="black">[</font><font color="black">]</font> cwidth;
+        <font color="blue">float</font><font color="black">[</font><font color="black">]</font> offset;
+        
+        <font color="green">/** return the texture used to display char.&#60;br&#62;
+         * It's generated on the fly to fit whatever Font and chars 
+         * you ask for.
+         */</font>
+        <font color="blue">public</font> OpenGLTexture2D Texture <font color="black">{</font> <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> texture; <font color="black">}</font> <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">override</font> <font color="blue">void</font> GetObjectData<font color="black">(</font>SerializationInfo info, 
+                                          StreamingContext context<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">base</font>.GetObjectData<font color="black">(</font>info, context<font color="black">)</font>;
+            info.AddValue<font color="black">(</font><font color="marooon">"texture"</font>,   texture<font color="black">)</font>;
+            info.AddValue<font color="black">(</font><font color="marooon">"displayed"</font>, displayed<font color="black">)</font>;
+            info.AddValue<font color="black">(</font><font color="marooon">"cwidth"</font>,    cwidth<font color="black">)</font>;
+            info.AddValue<font color="black">(</font><font color="marooon">"offset"</font>,    offset<font color="black">)</font>;
+            info.AddValue<font color="black">(</font><font color="marooon">"fwidth"</font>,    fwidth<font color="black">)</font>;
+            info.AddValue<font color="black">(</font><font color="marooon">"fheight"</font>,   fheight<font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="blue">protected</font> GDITextureFont<font color="black">(</font>SerializationInfo info, 
+                              StreamingContext context<font color="black">)</font>
+                              <font color="black">:</font> <font color="blue">base</font><font color="black">(</font>info, context<font color="black">)</font>
+        <font color="black">{</font>
+            texture   <font color="black">=</font> <font color="black">(</font>OpenGLTexture2D<font color="black">)</font> info.GetValue<font color="black">(</font><font color="marooon">"texture"</font>, <font color="blue">typeof</font><font color="black">(</font>OpenGLTexture2D<font color="black">)</font><font color="black">)</font>;
+            displayed <font color="black">=</font> <font color="black">(</font><font color="blue">char</font><font color="black">[</font><font color="black">]</font><font color="black">)</font>          info.GetValue<font color="black">(</font><font color="marooon">"displayed"</font>, <font color="blue">typeof</font><font color="black">(</font><font color="blue">char</font><font color="black">[</font><font color="black">]</font><font color="black">)</font><font color="black">)</font>;
+            cwidth    <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">[</font><font color="black">]</font><font color="black">)</font>         info.GetValue<font color="black">(</font><font color="marooon">"cwidth"</font>, <font color="blue">typeof</font><font color="black">(</font><font color="blue">float</font><font color="black">[</font><font color="black">]</font><font color="black">)</font><font color="black">)</font>;
+            offset    <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">[</font><font color="black">]</font><font color="black">)</font>         info.GetValue<font color="black">(</font><font color="marooon">"offset"</font>, <font color="blue">typeof</font><font color="black">(</font><font color="blue">float</font><font color="black">[</font><font color="black">]</font><font color="black">)</font><font color="black">)</font>;
+            fwidth    <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font>           info.GetDouble<font color="black">(</font><font color="marooon">"fwidth"</font><font color="black">)</font>;
+            fheight   <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font>           info.GetInt16<font color="black">(</font><font color="marooon">"fheight"</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/** Initialise an OpenGLFont with the char from  32 to 256 
+         * (ASCII &amp; latin) */</font>
+        <font color="blue">public</font> GDITextureFont<font color="black">(</font>Font f<font color="black">)</font> <font color="black">:</font> <font color="blue">this</font><font color="black">(</font>f, carray<font color="black">(</font><font color="black">(</font><font color="blue">char</font><font color="black">)</font><font color="maroon">0x20</font>, <font color="black">(</font><font color="blue">char</font><font color="black">)</font><font color="maroon">0x100</font><font color="black">)</font><font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+        <font color="green">/** Initialize an OpenGLFont to display a given range of chars */</font>
+        <font color="blue">public</font> GDITextureFont<font color="black">(</font>Font f, <font color="blue">char</font> first, <font color="blue">char</font> last<font color="black">)</font> <font color="black">:</font> <font color="blue">this</font><font color="black">(</font>f, carray<font color="black">(</font>first, last<font color="black">)</font><font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+        <font color="green">/** Initialize an OpenGLFont to display some characters */</font>
+        <font color="blue">public</font> GDITextureFont<font color="black">(</font>Font f, <font color="blue">char</font><font color="black">[</font><font color="black">]</font> c<font color="black">)</font> <font color="black">:</font> <font color="blue">base</font><font color="black">(</font><font color="black">(</font><font color="blue">char</font><font color="black">)</font> <font color="maroon">0</font>, <font color="black">(</font><font color="blue">char</font><font color="black">)</font> <font color="maroon">0</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>f <font color="black">=</font><font color="black">=</font> <font color="blue">null</font> <font color="black">|</font><font color="black">|</font> c <font color="black">=</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font>
+                <font color="blue">throw</font> <font color="blue">new</font> NullReferenceException<font color="black">(</font><font color="black">)</font>;
+            displayed <font color="black">=</font> c;
+            specialchar<font color="black">(</font>c<font color="black">)</font>; <font color="green">// remove annoyous char...</font>
+            CreateTexture<font color="black">(</font>f<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">override</font> <font color="blue">void</font> Dispose<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">base</font>.Dispose<font color="black">(</font><font color="black">)</font>;
+            texture.Dispose<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">override</font> <font color="blue">void</font> Dispose<font color="black">(</font>OpenGLContext ctxt<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">base</font>.Dispose<font color="black">(</font>ctxt<font color="black">)</font>;
+            texture.Dispose<font color="black">(</font>ctxt<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="blue">internal</font> <font color="blue">static</font> <font color="blue">void</font> specialchar<font color="black">(</font><font color="blue">char</font><font color="black">[</font><font color="black">]</font> tab<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">char</font><font color="black">[</font><font color="black">]</font> spec <font color="black">=</font> <font color="blue">new</font> <font color="blue">char</font><font color="black">[</font><font color="black">]</font> <font color="black">{</font><font color="black">(</font><font color="blue">char</font><font color="black">)</font> <font color="maroon">0</font>,<font color="marooon">'\t'</font>,<font color="marooon">'\n'</font>,<font color="marooon">'\b'</font>,<font color="marooon">'\r'</font>,<font color="marooon">'\a'</font>,<font color="marooon">'\f'</font>,<font color="marooon">'\v'</font><font color="black">}</font>;
+            <font color="blue">int</font> i, j;
+            <font color="blue">for</font><font color="black">(</font>i<font color="black">=</font><font color="maroon">0</font>; i<font color="black">&#60;</font>tab.Length; i<font color="black">+</font><font color="black">+</font><font color="black">)</font>
+                <font color="blue">for</font><font color="black">(</font>j<font color="black">=</font><font color="maroon">0</font>; j<font color="black">&#60;</font>spec.Length; j<font color="black">+</font><font color="black">+</font><font color="black">)</font>
+                    <font color="blue">if</font><font color="black">(</font>spec<font color="black">[</font>j<font color="black">]</font> <font color="black">=</font><font color="black">=</font> tab<font color="black">[</font>i<font color="black">]</font><font color="black">)</font>
+                        tab<font color="black">[</font>i<font color="black">]</font> <font color="black">=</font> <font color="marooon">' '</font>;
+        <font color="black">}</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">char</font><font color="black">[</font><font color="black">]</font> carray<font color="black">(</font><font color="blue">char</font> first, <font color="blue">char</font> last<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="green">// create the string array</font>
+            <font color="blue">int</font> n <font color="black">=</font> last <font color="black">-</font>first <font color="black">+</font> <font color="maroon">1</font>;
+            <font color="blue">char</font><font color="black">[</font><font color="black">]</font> c <font color="black">=</font> <font color="blue">new</font> <font color="blue">char</font><font color="black">[</font>n<font color="black">]</font>;
+            <font color="blue">int</font> i,j;
+            <font color="blue">for</font><font color="black">(</font>i<font color="black">=</font><font color="maroon">0</font>,j<font color="black">=</font>first; i<font color="black">&#60;</font>n; i<font color="black">+</font><font color="black">+</font>,j<font color="black">+</font><font color="black">+</font><font color="black">)</font>
+                c<font color="black">[</font>i<font color="black">]</font> <font color="black">=</font> <font color="black">(</font><font color="blue">char</font><font color="black">)</font> j;
+            <font color="blue">return</font> c;
+        <font color="black">}</font>
+
+        <font color="green">/** return the height of the font */</font>
+        <font color="blue">public</font> <font color="blue">float</font> Height <font color="black">{</font> <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> fheight; <font color="black">}</font> <font color="black">}</font>
+        
+        <font color="green">/** return the size of a char. 
+         * @param offset the relative start position of the character 
+         * for GDI drawing
+         **/</font>
+        <font color="blue">public</font> SizeF CharSize<font color="black">(</font><font color="blue">char</font> c, <font color="blue">out</font> <font color="blue">float</font> offset<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> i<font color="black">=</font><font color="maroon">0</font>; i<font color="black">&#60;</font>displayed.Length; i<font color="black">+</font><font color="black">+</font><font color="black">)</font>
+                <font color="blue">if</font><font color="black">(</font>displayed<font color="black">[</font>i<font color="black">]</font><font color="black">=</font><font color="black">=</font>c<font color="black">)</font>
+                    <font color="blue">return</font> CharSize<font color="black">(</font>i, <font color="blue">out</font> offset<font color="black">)</font>;
+            <font color="blue">throw</font> <font color="blue">new</font> ArgumentException<font color="black">(</font><font color="marooon">"no such char '"</font><font color="black">+</font>c<font color="black">+</font><font color="marooon">'\''</font><font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="green">/** return the size of a char. &#60;br&#62;
+         * The index is in the array of required chars
+         * @param anOffset the relative start position of the character 
+         * for GDI drawing
+         */</font>
+        <font color="blue">public</font> SizeF CharSize<font color="black">(</font><font color="blue">int</font> index, <font color="blue">out</font> <font color="blue">float</font> anOffset<font color="black">)</font>
+        <font color="black">{</font>
+            anOffset <font color="black">=</font> offset<font color="black">[</font>index<font color="black">]</font>;
+            <font color="blue">return</font> <font color="blue">new</font> SizeF<font color="black">(</font>cwidth<font color="black">[</font>index<font color="black">]</font>, fheight<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// prepare a texture Image from the font</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">private</font> <font color="blue">void</font> CreateTexture<font color="black">(</font>Font font<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="green">// create the string array</font>
+            <font color="blue">int</font> i,n <font color="black">=</font> displayed.Length;
+            cwidth <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font>n<font color="black">]</font>;
+            <font color="blue">int</font> nx <font color="black">=</font> <font color="black">(</font><font color="blue">int</font><font color="black">)</font> Math.Sqrt<font color="black">(</font>n<font color="black">)</font>;
+            
+            <font color="green">// get font info</font>
+            Bitmap img <font color="black">=</font> <font color="blue">new</font> Bitmap<font color="black">(</font><font color="maroon">10</font>, <font color="maroon">10</font>, PixelFormat.Format32bppArgb<font color="black">)</font>;
+            Graphics g <font color="black">=</font> Graphics.FromImage<font color="black">(</font>img<font color="black">)</font>;
+            fwidth <font color="black">=</font> <font color="maroon">0</font>;
+            fheight <font color="black">=</font> font.Height<font color="black">+</font><font color="maroon">1</font>;
+            offset <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font>n<font color="black">]</font>; <font color="green">// sorry, GDI is so boring ... :-(</font>
+            <font color="blue">for</font><font color="black">(</font>i<font color="black">=</font><font color="maroon">0</font>; i<font color="black">&#60;</font>n; i<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                cwidth<font color="black">[</font>i<font color="black">]</font> <font color="black">=</font> CharWidth<font color="black">(</font>g, font, displayed<font color="black">[</font>i<font color="black">]</font>, <font color="blue">out</font> offset<font color="black">[</font>i<font color="black">]</font><font color="black">)</font>;
+                <font color="blue">if</font><font color="black">(</font>cwidth<font color="black">[</font>i<font color="black">]</font> <font color="black">&#62;</font> fwidth<font color="black">)</font>
+                    fwidth <font color="black">=</font> cwidth<font color="black">[</font>i<font color="black">]</font>;
+            <font color="black">}</font>
+            g.Dispose<font color="black">(</font><font color="black">)</font>;
+            img.Dispose<font color="black">(</font><font color="black">)</font>;
+            
+            <font color="blue">int</font> w <font color="black">=</font> <font color="black">(</font><font color="blue">int</font><font color="black">)</font> Math.Ceiling<font color="black">(</font>fwidth<font color="black">)</font>;
+            <font color="blue">int</font> h <font color="black">=</font> <font color="black">(</font><font color="blue">int</font><font color="black">)</font> Math.Ceiling<font color="black">(</font>fheight<font color="black">)</font>;
+            <font color="blue">int</font> ny <font color="black">=</font> n <font color="black">/</font> nx <font color="black">+</font> <font color="black">(</font>n%nx <font color="black">=</font><font color="black">=</font> <font color="maroon">0</font> ? <font color="maroon">0</font> <font color="black">:</font> <font color="maroon">1</font><font color="black">)</font>;
+
+            <font color="green">// creating the texture</font>
+            <font color="green">// use a Square... so texture coordinate are more accurate</font>
+            <font color="green">// and char better drawn...</font>
+            <font color="blue">float</font> W <font color="black">=</font> OpenGLTexture2D.power_of_two<font color="black">(</font>nx <font color="black">*</font> w<font color="black">)</font>;
+            <font color="blue">float</font> H <font color="black">=</font> OpenGLTexture2D.power_of_two<font color="black">(</font>ny <font color="black">*</font> h<font color="black">)</font>;
+            img <font color="black">=</font> <font color="blue">new</font> Bitmap<font color="black">(</font><font color="black">(</font><font color="blue">int</font><font color="black">)</font>W, <font color="black">(</font><font color="blue">int</font><font color="black">)</font>H, PixelFormat.Format32bppArgb<font color="black">)</font>;
+            g <font color="black">=</font> Graphics.FromImage<font color="black">(</font>img<font color="black">)</font>;
+            SolidBrush brush <font color="black">=</font> <font color="blue">new</font> SolidBrush<font color="black">(</font>Color.White<font color="black">)</font>;
+            <font color="blue">for</font><font color="black">(</font>i<font color="black">=</font><font color="maroon">0</font>; i<font color="black">&#60;</font>n; i<font color="black">+</font><font color="black">+</font><font color="black">)</font>
+                g.DrawString<font color="black">(</font><font color="blue">new</font> String<font color="black">(</font>displayed<font color="black">[</font>i<font color="black">]</font>, <font color="maroon">1</font><font color="black">)</font>, 
+                             font, 
+                             brush, 
+                             <font color="green">// don't forget, OpenGL yAxis is bottom to top</font>
+                             <font color="blue">new</font> PointF<font color="black">(</font><font color="black">(</font>i % nx<font color="black">)</font> <font color="black">*</font> w <font color="black">-</font>offset<font color="black">[</font>i<font color="black">]</font>, H <font color="black">-</font><font color="black">(</font>i <font color="black">/</font> nx<font color="black">)</font> <font color="black">*</font> h <font color="black">-</font>h<font color="black">)</font><font color="black">)</font>;
+            brush.Dispose<font color="black">(</font><font color="black">)</font>;
+            g.Dispose<font color="black">(</font><font color="black">)</font>;
+            
+            texture <font color="black">=</font> <font color="blue">new</font> OpenGLTexture2D<font color="black">(</font>img, 
+                                          OpenGLTexture2D.Tex2DType.SIMPLE, 
+                                          <font color="blue">false</font><font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="green">/** return the char width, if paint with this graphic object. offset
+         * is the (relative position) to your x-position at which it will be 
+         * drawn */</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">float</font> CharWidth<font color="black">(</font>Graphics g, Font font, <font color="blue">char</font> c, <font color="blue">out</font> <font color="blue">float</font> offset<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>c<font color="black">=</font><font color="black">=</font><font color="marooon">' '</font><font color="black">)</font> <font color="black">{</font>
+                offset <font color="black">=</font> <font color="maroon">0</font>;
+                <font color="blue">return</font> <font color="maroon">0</font>.8f <font color="black">*</font> g.MeasureString<font color="black">(</font><font color="blue">new</font> String<font color="black">(</font>c, <font color="maroon">1</font><font color="black">)</font>, font<font color="black">)</font>.Width;
+            <font color="black">}</font>
+            <font color="blue">float</font> f <font color="black">=</font> g.MeasureString<font color="black">(</font><font color="blue">new</font> String<font color="black">(</font>c, <font color="maroon">100</font><font color="black">)</font>, font<font color="black">)</font>.Width<font color="black">/</font><font color="maroon">100</font>;
+            offset <font color="black">=</font> <font color="black">(</font>g.MeasureString<font color="black">(</font><font color="blue">new</font> String<font color="black">(</font>c, <font color="maroon">1</font><font color="black">)</font>, font<font color="black">)</font>.Width<font color="black">-</font>f<font color="black">)</font><font color="black">/</font><font color="maroon">2</font>;
+            <font color="blue">return</font> f;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// simply call personnal InitRange(font_base, char[])</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">protected</font> <font color="blue">override</font> <font color="blue">void</font> InitRange<font color="black">(</font><font color="blue">uint</font> font_base, <font color="blue">char</font> first, <font color="blue">char</font> last<font color="black">)</font>
+        <font color="black">{</font>
+            InitRange<font color="black">(</font>font_base, displayed<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// set the display list from the texture</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">protected</font> <font color="blue">virtual</font> <font color="blue">void</font> InitRange<font color="black">(</font><font color="blue">uint</font> font_base, <font color="blue">char</font><font color="black">[</font><font color="black">]</font> c<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="green">// get font info</font>
+            <font color="blue">int</font>   i,n <font color="black">=</font> c.Length;
+            <font color="blue">int</font>   nx  <font color="black">=</font> <font color="black">(</font><font color="blue">int</font><font color="black">)</font> Math.Sqrt<font color="black">(</font>n<font color="black">)</font>;
+            <font color="blue">int</font>   w   <font color="black">=</font> <font color="black">(</font><font color="blue">int</font><font color="black">)</font> Math.Ceiling<font color="black">(</font>fwidth<font color="black">)</font>;
+            <font color="blue">int</font>   h   <font color="black">=</font> <font color="black">(</font><font color="blue">int</font><font color="black">)</font> Math.Ceiling<font color="black">(</font>fheight<font color="black">)</font>;
+            <font color="blue">int</font>   ny  <font color="black">=</font> n <font color="black">/</font> nx <font color="black">+</font> <font color="black">(</font>n%nx <font color="black">=</font><font color="black">=</font> <font color="maroon">0</font> ? <font color="maroon">0</font> <font color="black">:</font> <font color="maroon">1</font><font color="black">)</font>;
+            <font color="blue">float</font> W   <font color="black">=</font> OpenGLTexture2D.power_of_two<font color="black">(</font>nx <font color="black">*</font> w<font color="black">)</font>;
+            <font color="blue">float</font> H   <font color="black">=</font> OpenGLTexture2D.power_of_two<font color="black">(</font>ny <font color="black">*</font> h<font color="black">)</font>;
+
+            <font color="green">// generate GL textured characters...</font>
+            <font color="blue">float</font> w2, tw;
+            <font color="blue">uint</font>  tid <font color="black">=</font> texture.ID;
+            <font color="blue">float</font> dv <font color="black">=</font> h<font color="black">/</font>H;
+            <font color="blue">for</font> <font color="black">(</font>i<font color="black">=</font><font color="maroon">0</font>; i<font color="black">&#60;</font>n; i<font color="black">+</font><font color="black">+</font><font color="black">)</font>
+            <font color="black">{</font>
+                <font color="blue">float</font> u <font color="black">=</font> <font color="black">(</font><font color="black">(</font>i % nx<font color="black">)</font> <font color="black">*</font> w<font color="black">)</font> <font color="black">/</font> W;
+                <font color="blue">float</font> v <font color="black">=</font> <font color="black">(</font><font color="black">(</font>i <font color="black">/</font> nx<font color="black">)</font> <font color="black">*</font> h<font color="black">)</font> <font color="black">/</font> H;
+                u <font color="black">-</font><font color="black">=</font> offset<font color="black">[</font>i<font color="black">]</font><font color="black">/</font>W;
+                w2 <font color="black">=</font> cwidth<font color="black">[</font>i<font color="black">]</font>;
+                <font color="blue">float</font> w0 <font color="black">=</font> <font color="black">-</font>offset<font color="black">[</font>i<font color="black">]</font>;
+                tw <font color="black">=</font> w2<font color="black">/</font>W;
+                tw <font color="black">+</font><font color="black">=</font> <font color="maroon">2</font><font color="black">*</font>offset<font color="black">[</font>i<font color="black">]</font><font color="black">/</font>W;
+                glNewList<font color="black">(</font><font color="black">(</font><font color="blue">uint</font><font color="black">)</font><font color="black">(</font>font_base<font color="black">+</font>displayed<font color="black">[</font>i<font color="black">]</font><font color="black">)</font>, GL_COMPILE<font color="black">)</font>;
+                    glBegin<font color="black">(</font>GL_QUADS<font color="black">)</font>;
+                        glTexCoord2f<font color="black">(</font>u , v<font color="black">)</font>;
+                        glVertex2f<font color="black">(</font>w0, <font color="maroon">0</font><font color="black">)</font>;
+                
+                        glTexCoord2f<font color="black">(</font>u <font color="black">+</font> tw, v<font color="black">)</font>;
+                        glVertex2f<font color="black">(</font>w2<font color="black">+</font>offset<font color="black">[</font>i<font color="black">]</font>,<font color="maroon">0</font><font color="black">)</font>;
+                
+                        glTexCoord2f<font color="black">(</font>u <font color="black">+</font> tw, v <font color="black">+</font> dv<font color="black">)</font>;
+                        glVertex2f<font color="black">(</font>w2<font color="black">+</font>offset<font color="black">[</font>i<font color="black">]</font>,h<font color="black">)</font>;
+                
+                        glTexCoord2f<font color="black">(</font>u, v <font color="black">+</font> dv<font color="black">)</font>;
+                        glVertex2f<font color="black">(</font>w0, h<font color="black">)</font>;
+                    glEnd<font color="black">(</font><font color="black">)</font>;
+                    glTranslatef<font color="black">(</font>w2,<font color="maroon">0</font>,<font color="maroon">0</font><font color="black">)</font>;
+                glEndList<font color="black">(</font><font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+
+        <font color="green">/** 
+         * save the current state and update it so font could work
+         **/</font>        
+        <font color="blue">protected</font> <font color="blue">virtual</font> <font color="blue">void</font> Push<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="green">// save modifed data</font>
+            glPushAttrib<font color="black">(</font>GL_COLOR_BUFFER_BIT<font color="black">|</font>GL_ENABLE_BIT<font color="black">|</font>GL_DEPTH_BUFFER_BIT<font color="black">)</font>;
+            glPushMatrix<font color="black">(</font><font color="black">)</font>;
+            
+            <font color="green">// bind the 'font' texture</font>
+            glEnable<font color="black">(</font>GL_TEXTURE_2D<font color="black">)</font>;
+            glBindTexture<font color="black">(</font>GL_TEXTURE_2D, Base<font color="black">)</font>;
+            
+            <font color="green">// enable blending (remove font background)</font>
+            glEnable<font color="black">(</font>GL_BLEND<font color="black">)</font>;
+            glBlendFunc<font color="black">(</font>GL_SRC_ALPHA, GL_ONE<font color="black">)</font>;
+            
+            <font color="green">// transparent drawing</font>
+            glDepthMask<font color="black">(</font><font color="black">(</font><font color="blue">byte</font><font color="black">)</font> GL_FALSE<font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="green">/** restore initial state */</font>
+        <font color="blue">protected</font> <font color="blue">virtual</font> <font color="blue">void</font> Pop<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            glPopMatrix<font color="black">(</font><font color="black">)</font>;
+            glPopAttrib<font color="black">(</font><font color="black">)</font>;
+            glBindTexture<font color="black">(</font>GL_TEXTURE_2D, <font color="maroon">0</font><font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="green">/** draw a string at the current origin. with a call to glCallLists. */</font>
+        <font color="blue">public</font> <font color="blue">override</font> <font color="blue">void</font> DrawString<font color="black">(</font>string s<font color="black">)</font>
+        <font color="black">{</font>
+            Push<font color="black">(</font><font color="black">)</font>;
+            glListBase<font color="black">(</font>Base<font color="black">)</font>;
+            glCallLists<font color="black">(</font>s.Length,GL_UNSIGNED_SHORT,s<font color="black">)</font>;
+            Pop<font color="black">(</font><font color="black">)</font>;
+            OpenGLException.Assert<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

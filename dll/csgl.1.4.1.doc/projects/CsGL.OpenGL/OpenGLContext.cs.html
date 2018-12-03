@@ -1,0 +1,378 @@
+<HTML>
+<HEAD>
+<TITLE>
+OpenGLContext.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+ 
+<font color="green">// should CsGL lookup for best PixelFormat itself,</font>
+<font color="green">// or leave it to OpenGL driver ?</font>
+<font color="green">// #define SOFTWARE_SEARCH</font>
+
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Collections;
+<font color="blue">using</font> System.Text;
+<font color="blue">using</font> System.Threading;
+<font color="blue">using</font> System.Runtime.InteropServices;
+<font color="blue">using</font> System.Drawing;
+<font color="blue">using</font> System.Drawing.Imaging;
+
+<font color="blue">namespace</font> CsGL.OpenGL
+<font color="black">{</font>
+    <font color="green">/**
+    * Though multiplatform, OpenGL has a critical, platform dependant,
+    * underlying handle,
+    * called the "OpenGL context" which hold any drawing information.
+    * It also set your OpenGL capacity (in regards to stencil buffer, 
+    * number of color, etc..) at its initialisation time.
+    * &#60;p&#62;
+    * Any OpenGL command you issue will be excecuted in the current 
+    * context or will do nothing if there is no current context. There
+    * is only one current context in each thread (a new context 
+    * replacing the old one), and a context could be current in only one
+    * thread at a time.. 
+    * &#60;p&#62;
+    * These objects are not functionnal until Create has been called
+    * on them.
+    * 
+    * @see Create
+    */</font>
+    <font color="blue">public</font> <font color="blue">abstract</font> <font color="blue">unsafe</font> <font color="blue">class</font> OpenGLContext <font color="black">:</font> GL, IDisposable
+    <font color="black">{</font>
+        <font color="green">// pixel format</font>
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_getPixelFormat"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">int</font> GetCurrentPixelFormat<font color="black">(</font>IntPtr gdi<font color="black">)</font>;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_getNumFormat"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">int</font> GetNumPixelFormat<font color="black">(</font>IntPtr gdi<font color="black">)</font>;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_getDisplayFromFormat"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> GetPixelFormat<font color="black">(</font>IntPtr gdi, <font color="blue">int</font> index, <font color="blue">out</font> DisplayType setting<font color="black">)</font>;
+        
+        <font color="blue">public</font> <font color="blue">int</font> NumPixelFormats
+        <font color="black">{</font> 
+            <font color="blue">get</font> <font color="black">{</font>
+                IntPtr gdi <font color="black">=</font> GetNativeGDI<font color="black">(</font><font color="black">)</font>;
+                try <font color="black">{</font> <font color="blue">return</font> GetNumPixelFormat<font color="black">(</font>gdi<font color="black">)</font>; <font color="black">}</font>
+                <font color="blue">finally</font> <font color="black">{</font> ReleaseNativeGDI<font color="black">(</font>gdi<font color="black">)</font>; <font color="black">}</font>
+            <font color="black">}</font>
+        <font color="black">}</font>
+        <font color="blue">public</font> DisplayType GetPixelFormat<font color="black">(</font><font color="blue">int</font> index<font color="black">)</font>
+        <font color="black">{</font>
+            IntPtr gdi <font color="black">=</font> GetNativeGDI<font color="black">(</font><font color="black">)</font>;
+            try <font color="black">{</font> 
+                DisplayType ret;
+                GetPixelFormat<font color="black">(</font>gdi, index, <font color="blue">out</font> ret<font color="black">)</font>;
+                <font color="blue">return</font> ret;
+            <font color="black">}</font>
+            <font color="blue">finally</font> <font color="black">{</font> ReleaseNativeGDI<font color="black">(</font>gdi<font color="black">)</font>; <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_setPixelFormat"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> SetPixelFormat<font color="black">(</font>IntPtr gdi, <font color="blue">int</font> format<font color="black">)</font>;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_setPixelFormatD"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> SetPixelFormat<font color="black">(</font>IntPtr gdi, <font color="blue">ref</font> DisplayType format<font color="black">)</font>;
+        
+        <font color="green">// GL context</font>
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_getCurrentCtxt"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> IntPtr GetCurrentContext<font color="black">(</font><font color="black">)</font>;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_createCtxt"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> IntPtr CreateContext<font color="black">(</font>IntPtr gdi, IntPtr shareList<font color="black">)</font>;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_deleteCtxt"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> DeleteContext<font color="black">(</font>IntPtr glctxt<font color="black">)</font>;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_grabCtxt"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> GrabContext<font color="black">(</font>IntPtr gdi, IntPtr glctxt<font color="black">)</font>;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_dropCtxt"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> DropContext<font color="black">(</font>IntPtr glctxt<font color="black">)</font>;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_swapBuffer"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> SwapContextBuffer<font color="black">(</font>IntPtr gdi, IntPtr glctxt<font color="black">)</font>;
+        
+        <font color="green">// --------------------------------------------------</font>
+        <font color="blue">private</font> IntPtr hglrc;
+        <font color="blue">private</font> Palette palette;
+        <font color="green">// the list of all context sharing display list together with this one</font>
+        <font color="blue">private</font> Hashtable sharePool; 
+        <font color="green">// for context local storage...</font>
+        <font color="green">// this table is shared by context sharing list</font>
+        <font color="blue">private</font> Hashtable locals;
+        
+        <font color="blue">public</font> IntPtr  Handle <font color="black">{</font> <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> hglrc; <font color="black">}</font> <font color="black">}</font>
+        <font color="blue">public</font> Palette Palette <font color="black">{</font> <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> palette; <font color="black">}</font> <font color="black">}</font>
+        
+        <font color="green">/** return a window HDC (yes, HDC, not GDI. maybe an unwise name choice) */</font>
+        <font color="blue">public</font> <font color="blue">abstract</font> IntPtr GetNativeGDI<font color="black">(</font><font color="black">)</font>;
+        <font color="blue">public</font> <font color="blue">abstract</font> <font color="blue">void</font> ReleaseNativeGDI<font color="black">(</font>IntPtr p<font color="black">)</font>;
+        <font color="green">/**
+         * create a native OpenGL context.&#60;br&#62;
+         * It's an error to call this method on a context already created,
+         * call recreate instead...
+         * @param display the desired pixel format
+         * @param toShare an other context with whom share display list. 
+         * could be null
+         */</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> Create<font color="black">(</font>DisplayType display, OpenGLContext toShare<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>hglrc<font color="black">!</font><font color="black">=</font>IntPtr.Zero<font color="black">)</font>
+                <font color="blue">throw</font> <font color="blue">new</font> InvalidOperationException<font color="black">(</font><font color="marooon">"Already Created.."</font><font color="black">)</font>;
+            IntPtr gdi <font color="black">=</font> GetNativeGDI<font color="black">(</font><font color="black">)</font>;
+            try
+            <font color="black">{</font>
+                SetPixelFormat<font color="black">(</font>gdi, <font color="blue">ref</font> display<font color="black">)</font>;
+                initHGLRC<font color="black">(</font>gdi, toShare<font color="black">)</font>;
+            <font color="black">}</font>
+            <font color="blue">finally</font> <font color="black">{</font> ReleaseNativeGDI<font color="black">(</font>gdi<font color="black">)</font>; <font color="black">}</font>
+        <font color="black">}</font>
+        <font color="green">/**
+         * create a native OpenGL context with a given PixelFormat.&#60;br&#62;
+         * It's an error to call this method on a context already created,
+         * call recreate instead...
+         * @param display the required pixel format
+         * @param toShare an other context with whom share display list. 
+         * could be null
+         */</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> Create<font color="black">(</font><font color="blue">int</font> display, OpenGLContext toShare<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>hglrc<font color="black">!</font><font color="black">=</font>IntPtr.Zero<font color="black">)</font>
+                <font color="blue">throw</font> <font color="blue">new</font> InvalidOperationException<font color="black">(</font><font color="marooon">"Already Created.."</font><font color="black">)</font>;
+            IntPtr gdi <font color="black">=</font> GetNativeGDI<font color="black">(</font><font color="black">)</font>;
+            try
+            <font color="black">{</font>
+                SetPixelFormat<font color="black">(</font>gdi, display<font color="black">)</font>;
+                initHGLRC<font color="black">(</font>gdi, toShare<font color="black">)</font>;
+            <font color="black">}</font>
+            <font color="blue">finally</font> <font color="black">{</font> ReleaseNativeGDI<font color="black">(</font>gdi<font color="black">)</font>; <font color="black">}</font>
+        <font color="black">}</font>
+        <font color="blue">private</font> <font color="blue">void</font> initHGLRC<font color="black">(</font>IntPtr gdi, OpenGLContext toShare<font color="black">)</font>
+        <font color="black">{</font>
+            DisplayType dt;
+            GetPixelFormat<font color="black">(</font>gdi, GetCurrentPixelFormat<font color="black">(</font>gdi<font color="black">)</font>, <font color="blue">out</font> dt<font color="black">)</font>;
+            Setting <font color="black">=</font> dt;
+            <font color="blue">if</font><font color="black">(</font><font color="black">!</font>Setting.isRgba<font color="black">)</font> <font color="black">{</font>
+                <font color="blue">int</font> nColor;
+                IntPtr p <font color="black">=</font> Palette.csgl_palette_createPalette<font color="black">(</font><font color="blue">ref</font> dt, gdi, <font color="blue">out</font> nColor<font color="black">)</font>;
+                <font color="blue">if</font><font color="black">(</font>p <font color="black">!</font><font color="black">=</font> IntPtr.Zero<font color="black">)</font>
+                    palette <font color="black">=</font> CreatePalette<font color="black">(</font>p, nColor<font color="black">)</font>;
+            <font color="black">}</font>
+            
+            hglrc <font color="black">=</font> CreateContext<font color="black">(</font>gdi, toShare<font color="black">=</font><font color="black">=</font><font color="blue">null</font> ? IntPtr.Zero <font color="black">:</font> toShare.Handle<font color="black">)</font>;
+            all<font color="black">[</font>hglrc<font color="black">]</font> <font color="black">=</font> <font color="blue">this</font>;
+            
+            <font color="blue">if</font><font color="black">(</font>toShare<font color="black">=</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font> <font color="black">{</font>
+                sharePool <font color="black">=</font> <font color="blue">new</font> Hashtable<font color="black">(</font><font color="black">)</font>;
+                locals <font color="black">=</font> <font color="blue">new</font> Hashtable<font color="black">(</font><font color="black">)</font>;
+            <font color="black">}</font>
+            <font color="blue">else</font> <font color="black">{</font>
+                sharePool <font color="black">=</font> toShare.sharePool;
+                locals <font color="black">=</font> toShare.locals;
+            <font color="black">}</font>
+            sharePool<font color="black">[</font><font color="blue">this</font><font color="black">]</font> <font color="black">=</font> <font color="blue">this</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/** create and return a CsGL palette from a native palette */</font>
+        <font color="blue">protected</font> <font color="blue">virtual</font> Palette CreatePalette<font color="black">(</font>IntPtr pal, <font color="blue">int</font> size<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">return</font> <font color="blue">new</font> Palette<font color="black">(</font>pal, size, <font color="blue">this</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/** swap buffer if the context is multi-bufferred */</font>
+        <font color="blue">public</font> <font color="blue">void</font> SwapBuffer<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>hglrc<font color="black">=</font><font color="black">=</font>IntPtr.Zero<font color="black">)</font>
+                <font color="blue">throw</font> <font color="blue">new</font> OpenGLException<font color="black">(</font><font color="marooon">"OpenGLContext not Valid"</font><font color="black">)</font>;
+            <font color="blue">if</font><font color="black">(</font><font color="black">(</font>Setting.flags<font color="black">&</font>DisplayFlags.DOUBLEBUFFER<font color="black">)</font><font color="black">=</font><font color="black">=</font><font color="maroon">0</font><font color="black">)</font>
+                <font color="blue">return</font>;
+            IntPtr gdi <font color="black">=</font> GetNativeGDI<font color="black">(</font><font color="black">)</font>;
+            try <font color="black">{</font> SwapContextBuffer<font color="black">(</font>gdi, hglrc<font color="black">)</font>; <font color="black">}</font>
+            <font color="blue">finally</font> <font color="black">{</font> ReleaseNativeGDI<font color="black">(</font>gdi<font color="black">)</font>; <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">/** make this context the current one */</font>
+        <font color="blue">public</font> <font color="blue">void</font> Grab<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>hglrc<font color="black">=</font><font color="black">=</font>IntPtr.Zero<font color="black">)</font>
+                <font color="blue">throw</font> <font color="blue">new</font> OpenGLException<font color="black">(</font><font color="marooon">"OpenGLContext not Valid"</font><font color="black">)</font>;
+            IntPtr gdi <font color="black">=</font> GetNativeGDI<font color="black">(</font><font color="black">)</font>;
+            try <font color="black">{</font> GrabContext<font color="black">(</font>gdi, hglrc<font color="black">)</font>; <font color="black">}</font>
+            <font color="blue">finally</font> <font color="black">{</font> ReleaseNativeGDI<font color="black">(</font>gdi<font color="black">)</font>; <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">/** prevent this context from being the current one.
+         * This method has a performance cost. call it only when necessary.
+         */</font>
+        <font color="blue">public</font> <font color="blue">void</font> Drop<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>hglrc<font color="black">=</font><font color="black">=</font>IntPtr.Zero<font color="black">)</font>
+                <font color="blue">return</font>;
+            DropContext<font color="black">(</font>hglrc<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/**
+         * All OpenGLContext present in the application
+         */</font>
+        <font color="blue">public</font> <font color="blue">static</font> ICollection AllContext
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> all.Values; <font color="black">}</font>
+        <font color="black">}</font>
+        <font color="green">/** the list of OpenGLContext sharing display list with this one */</font>
+        <font color="blue">public</font> ICollection SharingContext
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> sharePool.Keys; <font color="black">}</font>
+        <font color="black">}</font>
+        
+        ~OpenGLContext<font color="black">(</font><font color="black">)</font> <font color="black">{</font> Dispose<font color="black">(</font><font color="black">)</font>; <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> Dispose<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            IntPtr p <font color="black">=</font> hglrc;
+            <font color="blue">if</font><font color="black">(</font>p<font color="black">=</font><font color="black">=</font>IntPtr.Zero<font color="black">)</font> <font color="green">// don't dispose twice...</font>
+                <font color="blue">return</font>;
+            try
+            <font color="black">{</font>
+                GC.SuppressFinalize<font color="black">(</font><font color="blue">this</font><font color="black">)</font>;
+                Drop<font color="black">(</font><font color="black">)</font>;
+                DeleteContext<font color="black">(</font>hglrc<font color="black">)</font>;
+                hglrc <font color="black">=</font> IntPtr.Zero;
+                
+                <font color="blue">if</font><font color="black">(</font>palette<font color="black">!</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font>
+                    palette.Dispose<font color="black">(</font><font color="black">)</font>;
+            <font color="black">}</font>
+            <font color="blue">finally</font> 
+            <font color="black">{</font> 
+                all.Remove<font color="black">(</font>p<font color="black">)</font>;
+                sharePool.Remove<font color="black">(</font><font color="blue">this</font><font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">bool</font> Valid 
+        <font color="black">{</font> 
+            <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> hglrc <font color="black">!</font><font color="black">=</font> IntPtr.Zero; <font color="black">}</font> 
+        <font color="black">}</font>
+        
+        <font color="blue">private</font> <font color="blue">static</font> Hashtable all <font color="black">=</font> <font color="blue">new</font> Hashtable<font color="black">(</font><font color="black">)</font>;
+        <font color="blue">public</font> <font color="blue">static</font> OpenGLContext Current
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font>
+                IntPtr p <font color="black">=</font> GetCurrentContext<font color="black">(</font><font color="black">)</font>;
+                <font color="blue">if</font><font color="black">(</font>p <font color="black">=</font><font color="black">=</font> IntPtr.Zero<font color="black">)</font>
+                    <font color="blue">return</font> <font color="blue">null</font>;
+                <font color="blue">return</font> <font color="black">(</font>OpenGLContext<font color="black">)</font> all<font color="black">[</font>p<font color="black">]</font>;
+            <font color="black">}</font>
+            <font color="blue">set</font> 
+            <font color="black">{</font> 
+                <font color="blue">if</font><font color="black">(</font><font color="blue">value</font> <font color="black">=</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font> <font color="black">{</font>
+                    OpenGLContext current <font color="black">=</font> Current;
+                    <font color="blue">if</font><font color="black">(</font>current <font color="black">!</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font>
+                        current.Drop<font color="black">(</font><font color="black">)</font>;
+                <font color="black">}</font>
+                <font color="blue">else</font>
+                    <font color="blue">value</font>.Grab<font color="black">(</font><font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">bool</font> IsCurrent
+        <font color="black">{</font>
+            <font color="blue">set</font> <font color="black">{</font>
+                <font color="blue">if</font><font color="black">(</font><font color="blue">value</font><font color="black">)</font>
+                    Grab<font color="black">(</font><font color="black">)</font>;
+                <font color="blue">else</font>
+                    Drop<font color="black">(</font><font color="black">)</font>;
+            <font color="black">}</font>
+            <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> <font color="blue">this</font> <font color="black">=</font><font color="black">=</font> Current; <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">virtual</font> Bitmap ToImage<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            Grab<font color="black">(</font><font color="black">)</font>;
+            
+            <font color="blue">int</font><font color="black">[</font><font color="black">]</font> b <font color="black">=</font> <font color="blue">new</font> <font color="blue">int</font><font color="black">[</font><font color="maroon">16</font><font color="black">]</font>;
+            glGetIntegerv<font color="black">(</font>GL_VIEWPORT, b<font color="black">)</font>;
+            <font color="blue">if</font><font color="black">(</font>b<font color="black">[</font><font color="maroon">2</font><font color="black">]</font><font color="black">&#60;</font><font color="maroon">1</font> <font color="black">|</font><font color="black">|</font> b<font color="black">[</font><font color="maroon">3</font><font color="black">]</font><font color="black">&#60;</font><font color="maroon">1</font><font color="black">)</font>
+                <font color="blue">return</font> <font color="blue">null</font>;
+            
+            Bitmap img <font color="black">=</font> <font color="blue">new</font> Bitmap<font color="black">(</font>b<font color="black">[</font><font color="maroon">2</font><font color="black">]</font>, b<font color="black">[</font><font color="maroon">3</font><font color="black">]</font>, System.Drawing.Imaging.PixelFormat.Format24bppRgb<font color="black">)</font>;
+            BitmapData tex;
+            Rectangle rect <font color="black">=</font> <font color="blue">new</font> Rectangle<font color="black">(</font><font color="maroon">0</font>, <font color="maroon">0</font>, b<font color="black">[</font><font color="maroon">2</font><font color="black">]</font>, b<font color="black">[</font><font color="maroon">3</font><font color="black">]</font><font color="black">)</font>;
+            tex <font color="black">=</font> img.LockBits<font color="black">(</font>rect, ImageLockMode.ReadWrite, System.Drawing.Imaging.PixelFormat.Format24bppRgb<font color="black">)</font>;
+            glReadPixels<font color="black">(</font><font color="maroon">0</font>, <font color="maroon">0</font>, b<font color="black">[</font><font color="maroon">2</font><font color="black">]</font>, b<font color="black">[</font><font color="maroon">3</font><font color="black">]</font>, GL_BGR_EXT, GL_UNSIGNED_BYTE, tex.Scan0<font color="black">)</font>;
+            
+            img.UnlockBits<font color="black">(</font>tex<font color="black">)</font>;
+            img.RotateFlip<font color="black">(</font>RotateFlipType.RotateNoneFlipY<font color="black">)</font>;
+            
+            OpenGLException.Assert<font color="black">(</font><font color="black">)</font>;
+            <font color="blue">return</font> img;
+        <font color="black">}</font>
+
+        <font color="green">/** store a value in a table local to this context and those
+         * who share display list with it */</font>
+        <font color="blue">public</font> <font color="blue">void</font> Set<font color="black">(</font><font color="blue">object</font> key, <font color="blue">object</font> val<font color="black">)</font>  
+        <font color="black">{</font> 
+            <font color="blue">if</font><font color="black">(</font>val<font color="black">=</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font>
+                locals.Remove<font color="black">(</font>key<font color="black">)</font>;
+            <font color="blue">else</font>
+                locals<font color="black">[</font>key<font color="black">]</font> <font color="black">=</font> val;
+        <font color="black">}</font>
+        <font color="green">/** retrive a value in a table local to this context and those
+         * who share display list with it */</font>
+        <font color="blue">public</font> <font color="blue">object</font> Get<font color="black">(</font><font color="blue">object</font> key<font color="black">)</font> <font color="black">{</font> <font color="blue">return</font> locals<font color="black">[</font>key<font color="black">]</font>; <font color="black">}</font>
+        
+        <font color="green">/** return the PixelFormat of the underlying control/image */</font>
+        <font color="blue">public</font> DisplayType PixelFormat <font color="black">{</font><font color="blue">get</font><font color="black">{</font> <font color="blue">return</font> Setting; <font color="black">}</font><font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">int</font> PixelFormatIndex
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font>
+                IntPtr gdi <font color="black">=</font> GetNativeGDI<font color="black">(</font><font color="black">)</font>;
+                try <font color="black">{</font> <font color="blue">return</font> GetCurrentPixelFormat<font color="black">(</font>gdi<font color="black">)</font>; <font color="black">}</font>
+                <font color="blue">finally</font> <font color="black">{</font> ReleaseNativeGDI<font color="black">(</font>gdi<font color="black">)</font>; <font color="black">}</font>
+            <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">// store like this to provoke an error if asked when no PixelFormat is set</font>
+        <font color="blue">private</font> <font color="blue">object</font> setting;
+        <font color="blue">private</font> DisplayType Setting
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> <font color="black">(</font>DisplayType<font color="black">)</font> setting; <font color="black">}</font>
+            <font color="blue">set</font> <font color="black">{</font> setting <font color="black">=</font> <font color="blue">value</font>; <font color="black">}</font>
+        <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

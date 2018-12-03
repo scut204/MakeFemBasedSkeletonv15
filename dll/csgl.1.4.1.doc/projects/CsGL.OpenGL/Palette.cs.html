@@ -1,0 +1,151 @@
+<HTML>
+<HEAD>
+<TITLE>
+Palette.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Collections;
+<font color="blue">using</font> System.Text;
+<font color="blue">using</font> System.Threading;
+<font color="blue">using</font> System.Runtime.InteropServices;
+<font color="blue">using</font> System.Drawing;
+<font color="blue">using</font> System.Drawing.Imaging;
+
+<font color="blue">namespace</font> CsGL.OpenGL
+<font color="black">{</font>
+    <font color="green">/**
+     * this Object is automatically created by the context in case
+     * of indexed color mode.
+     * &#60;p&#62;
+     * &#60;B&#62;ANYWAY IT DOESN'T WORK YET&#60;/B&#62;
+     * &#60;br&#62;
+     * If anyone has idea, I given up. BTW they should be automatically
+     * created and accessed from Palette "aware" OpenGLContext
+     */</font>
+    <font color="blue">public</font> <font color="blue">class</font> Palette <font color="black">:</font> CsGL.OSLib, IDisposable
+    <font color="black">{</font>
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">internal</font> <font color="blue">static</font> <font color="blue">extern</font> IntPtr csgl_palette_createPalette<font color="black">(</font><font color="blue">ref</font> DisplayType fmt, IntPtr hdc, <font color="blue">out</font> <font color="blue">int</font> size<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">internal</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> csgl_palette_destroyPalette<font color="black">(</font>IntPtr pal, IntPtr hdc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">internal</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> csgl_palette_color<font color="black">(</font>IntPtr pal, <font color="blue">bool</font> isGet, <font color="blue">int</font> index, <font color="blue">ref</font> <font color="blue">byte</font> r, <font color="blue">ref</font> <font color="blue">byte</font> g, <font color="blue">ref</font> <font color="blue">byte</font> b<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">internal</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> csgl_palette_update<font color="black">(</font>IntPtr pal, IntPtr hdc<font color="black">)</font>;
+        
+        <font color="black">[</font>Serializable<font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">struct</font> Color
+        <font color="black">{</font>
+            <font color="blue">public</font> <font color="blue">byte</font> r,g,b;
+            <font color="blue">public</font> Color<font color="black">(</font><font color="blue">byte</font> red, <font color="blue">byte</font> green, <font color="blue">byte</font> blue<font color="black">)</font>
+            <font color="black">{</font>
+                r <font color="black">=</font> red;
+                g <font color="black">=</font> green;
+                b <font color="black">=</font> blue;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="blue">int</font> size;
+        IntPtr handle;
+        OpenGLContext context;
+        
+        <font color="blue">public</font> Palette<font color="black">(</font>IntPtr aHandle, <font color="blue">int</font> aSize, OpenGLContext ctxt<font color="black">)</font>
+        <font color="black">{</font>
+            size <font color="black">=</font> aSize;
+            context <font color="black">=</font> ctxt;
+        <font color="black">}</font>
+        ~Palette<font color="black">(</font><font color="black">)</font> <font color="black">{</font> Dispose<font color="black">(</font><font color="black">)</font>; <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">int</font> Size <font color="black">{</font> <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> size; <font color="black">}</font> <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> Dispose<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>handle<font color="black">=</font><font color="black">=</font>IntPtr.Zero<font color="black">)</font>
+                <font color="blue">return</font>;
+            IntPtr p <font color="black">=</font> context.Valid ? context.GetNativeGDI<font color="black">(</font><font color="black">)</font> <font color="black">:</font> IntPtr.Zero;
+            csgl_palette_destroyPalette<font color="black">(</font>handle, p<font color="black">)</font>;
+            <font color="blue">if</font><font color="black">(</font>p <font color="black">!</font><font color="black">=</font> IntPtr.Zero<font color="black">)</font>
+                context.ReleaseNativeGDI<font color="black">(</font>p<font color="black">)</font>;
+            handle <font color="black">=</font> IntPtr.Zero;
+            GC.SuppressFinalize<font color="black">(</font><font color="blue">this</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">virtual</font> Color <font color="blue">this</font><font color="black">[</font><font color="blue">int</font> index<font color="black">]</font>
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font>
+                <font color="blue">if</font><font color="black">(</font>index<font color="black">&#60;</font><font color="maroon">0</font><font color="black">|</font><font color="black">|</font>index<font color="black">&#62;</font><font color="black">=</font>size<font color="black">)</font>
+                    <font color="blue">throw</font> <font color="blue">new</font> IndexOutOfRangeException<font color="black">(</font><font color="black">)</font>;
+                Color ret <font color="black">=</font> <font color="blue">new</font> Color<font color="black">(</font><font color="black">)</font>;
+                csgl_palette_color<font color="black">(</font>handle, <font color="blue">true</font>, index, <font color="blue">ref</font> ret.r
+                                                      , <font color="blue">ref</font> ret.g
+                                                      , <font color="blue">ref</font> ret.b<font color="black">)</font>;
+                <font color="blue">return</font> ret;
+            <font color="black">}</font>
+            <font color="blue">set</font> <font color="black">{</font>
+                <font color="blue">if</font><font color="black">(</font>index<font color="black">&#60;</font><font color="maroon">0</font><font color="black">|</font><font color="black">|</font>index<font color="black">&#62;</font><font color="black">=</font>size<font color="black">)</font>
+                    <font color="blue">throw</font> <font color="blue">new</font> IndexOutOfRangeException<font color="black">(</font><font color="black">)</font>;
+                csgl_palette_color<font color="black">(</font>handle, <font color="blue">false</font>, index, <font color="blue">ref</font> <font color="blue">value</font>.r
+                                                       , <font color="blue">ref</font> <font color="blue">value</font>.g
+                                                       , <font color="blue">ref</font> <font color="blue">value</font>.b<font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">/** get an array with the current color values
+         * of the palette */</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> Color<font color="black">[</font><font color="black">]</font> Colors
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font>
+                Color<font color="black">[</font><font color="black">]</font> ret <font color="black">=</font> <font color="blue">new</font> Color<font color="black">[</font>Size<font color="black">]</font>;
+                <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> i<font color="black">=</font><font color="maroon">0</font>; i<font color="black">&#60;</font>ret.Length; i<font color="black">+</font><font color="black">+</font><font color="black">)</font>
+                    ret<font color="black">[</font>i<font color="black">]</font> <font color="black">=</font> <font color="blue">this</font><font color="black">[</font>i<font color="black">]</font>;
+                <font color="blue">return</font> ret;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">/** update the palette with whatever you have set */</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> Sync<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            IntPtr p <font color="black">=</font> context.GetNativeGDI<font color="black">(</font><font color="black">)</font>;
+            try <font color="black">{</font> csgl_palette_update<font color="black">(</font>handle, p<font color="black">)</font>; <font color="black">}</font>
+            <font color="blue">finally</font> <font color="black">{</font> context.ReleaseNativeGDI<font color="black">(</font>p<font color="black">)</font>; <font color="black">}</font>
+        <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

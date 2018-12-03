@@ -1,0 +1,204 @@
+<HTML>
+<HEAD>
+<TITLE>
+OpenGLControl.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Diagnostics;
+<font color="blue">using</font> System.Text;
+<font color="blue">using</font> System.Runtime.InteropServices;
+<font color="blue">using</font> System.Windows.Forms;
+<font color="blue">using</font> System.Drawing;
+<font color="blue">using</font> CsGL.Util;
+
+<font color="blue">namespace</font> CsGL.OpenGL
+<font color="black">{</font>
+    <font color="green">/**
+    * This an example implementation of OpenGLContext as a control.
+    * this "an opengl view" which means you could issue OpenGL
+    * command in its glDraw() method (called by default OnPaint() implementation).
+    * &#60;br&#62;
+    * The Context is allocated lazily on demand. Therefore it is not,
+    * by default, instanciated in the constructor. If you want to
+    * init OpenGL there, call Context.Grab() first.
+    * &#60;P&#62;
+    * This simple object is not well designed for multithreading. As context
+    * could be current in only 1 thread at a time. Yo better design your
+    * own widget for multithreaded code.
+    */</font>
+    <font color="blue">public</font> <font color="blue">class</font> OpenGLControl <font color="black">:</font> System.Windows.Forms.Control, IDisposable
+    <font color="black">{</font>
+        OpenGLContext ctxt;
+        
+        <font color="blue">public</font> OpenGLControl<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            SetStyle<font color="black">(</font>ControlStyles.AllPaintingInWmPaint, <font color="blue">true</font><font color="black">)</font>;
+            SetStyle<font color="black">(</font>ControlStyles.Opaque, <font color="blue">true</font><font color="black">)</font>;
+            SetStyle<font color="black">(</font>ControlStyles.ResizeRedraw, <font color="blue">true</font><font color="black">)</font>;
+            SetStyle<font color="black">(</font>ControlStyles.UserPaint, <font color="blue">true</font><font color="black">)</font>;
+            SetStyle<font color="black">(</font>ControlStyles.DoubleBuffer, <font color="blue">false</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// This method is called whenever the ctxt is needed and </font>
+        <font color="green">/// not yet initialized. It return a context which draw </font>
+        <font color="green">/// on the controil and call InitGLContext on it</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">protected</font> <font color="blue">virtual</font> OpenGLContext CreateContext<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            ControlGLContext c <font color="black">=</font> <font color="blue">new</font> ControlGLContext<font color="black">(</font><font color="blue">this</font><font color="black">)</font>;
+            c.Create<font color="black">(</font><font color="blue">new</font> DisplayType<font color="black">(</font><font color="maroon">0</font>,<font color="maroon">0</font><font color="black">)</font>, <font color="blue">null</font><font color="black">)</font>;
+            <font color="blue">return</font> c;
+        <font color="black">}</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// This method destroy the current OpenGLContext. Which would be </font>
+        <font color="green">/// automatically recreated when needed</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">protected</font> <font color="blue">virtual</font> <font color="blue">void</font> DisposeContext<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>ctxt<font color="black">=</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font>
+                <font color="blue">return</font>;
+            
+            OpenGLContext aCtxt <font color="black">=</font> ctxt;
+            ctxt <font color="black">=</font> <font color="blue">null</font>;
+            aCtxt.Dispose<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="green">/** just here for backward compatibility. merely dispose the
+         * context */</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> RecreateContext<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            DisposeContext<font color="black">(</font><font color="black">)</font>;
+            <font color="green">// ctxt = CreateContext(); // not needed</font>
+        <font color="black">}</font>
+        
+        <font color="blue">protected</font> <font color="blue">override</font> <font color="blue">void</font> Dispose<font color="black">(</font><font color="blue">bool</font> disposing<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>disposing <font color="black">&</font><font color="black">&</font> ctxt<font color="black">!</font><font color="black">=</font><font color="blue">null</font> <font color="black">&</font><font color="black">&</font> ctxt.Valid<font color="black">)</font>
+                ctxt.Dispose<font color="black">(</font><font color="black">)</font>;
+            <font color="blue">base</font>.Dispose<font color="black">(</font>disposing<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// return the GL context of this windows. create it if needed.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> OpenGLContext Context 
+        <font color="black">{</font> 
+            <font color="blue">get</font> 
+            <font color="black">{</font>
+                <font color="blue">if</font><font color="black">(</font>ctxt<font color="black">=</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font> <font color="black">{</font>
+                    ctxt <font color="black">=</font> CreateContext<font color="black">(</font><font color="black">)</font>;
+                    ctxt.Grab<font color="black">(</font><font color="black">)</font>;
+                    InitGLContext<font color="black">(</font><font color="black">)</font>;
+                <font color="black">}</font>
+                <font color="blue">return</font> ctxt;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// this method is to be called each time a GL context is created.</font>
+        <font color="green">/// for example at the creation of the Control, before printing, etc..</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">protected</font> <font color="blue">virtual</font> <font color="blue">void</font> InitGLContext<font color="black">(</font><font color="black">)</font> <font color="black">{</font><font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// call it to SwapBuffer if you are double buffered.</font>
+        <font color="green">/// it is also a good idea to do it before doing standart</font>
+        <font color="green">/// gdi drawing if you want to use this feature.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">protected</font> <font color="blue">virtual</font> <font color="blue">void</font> SwapBuffer<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>ctxt<font color="black">!</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font>
+                ctxt.SwapBuffer<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// prepare OpenGL for rendering on this window by grabbing context and</font>
+        <font color="green">/// call glDraw.</font>
+        <font color="green">/// override glDraw to do gl operation.</font>
+        <font color="green">/// &#60;p&#62;this method Grab() the control context.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">protected</font> <font color="blue">override</font> <font color="blue">void</font> OnPaint<font color="black">(</font>PaintEventArgs pevent<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">base</font>.OnPaint<font color="black">(</font>pevent<font color="black">)</font>;
+            Context.Grab<font color="black">(</font><font color="black">)</font>;
+            glDraw<font color="black">(</font><font color="black">)</font>;
+            GL.glFinish<font color="black">(</font><font color="black">)</font>;
+            SwapBuffer<font color="black">(</font><font color="black">)</font>;
+            OpenGLException.Assert<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// do nothing =&#62; avoid flashing. anyway ControlStyles.AllPaintingInWmPaint</font>
+        <font color="green">/// is set</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">protected</font> <font color="blue">override</font> <font color="blue">void</font> OnPaintBackground<font color="black">(</font>PaintEventArgs pevent<font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// the main drawing method. OnPaint prepare context and such stuff.</font>
+        <font color="green">/// override this to draw..</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> glDraw<font color="black">(</font><font color="black">)</font> <font color="black">{</font><font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// make this control's OpenGL context the current context for</font>
+        <font color="green">/// this thread.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">void</font> GrabContext<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            Context.Grab<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// set glViewport. subclass to set frustrum...</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">protected</font> <font color="blue">override</font> <font color="blue">void</font> OnSizeChanged<font color="black">(</font>EventArgs e<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">base</font>.OnSizeChanged<font color="black">(</font>e<font color="black">)</font>;
+            
+            Size s <font color="black">=</font> Size;
+            Context.Grab<font color="black">(</font><font color="black">)</font>;
+            GL.glViewport<font color="black">(</font><font color="maroon">0</font>, <font color="maroon">0</font>, s.Width, s.Height<font color="black">)</font>;
+            Invalidate<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

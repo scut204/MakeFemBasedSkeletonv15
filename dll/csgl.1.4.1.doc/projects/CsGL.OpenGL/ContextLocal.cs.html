@@ -1,0 +1,187 @@
+<HTML>
+<HEAD>
+<TITLE>
+ContextLocal.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Collections;
+<font color="blue">using</font> System.Runtime.Serialization;
+
+<font color="blue">namespace</font> CsGL.OpenGL
+<font color="black">{</font>
+    <font color="green">/// &#60;summary&#62;</font>
+    <font color="green">/// This class is usefull to manage OpenGLContext local variable </font>
+    <font color="green">/// such as font, bitmap, ..</font>
+    <font color="green">/// &#60;/summary&#62;</font>
+    <font color="black">[</font>Serializable<font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">class</font> ContextLocal <font color="black">:</font> GL, IDisposable, ISerializable
+    <font color="black">{</font>
+        <font color="blue">public</font> ContextLocal<font color="black">(</font><font color="black">)</font> <font color="black">{</font><font color="black">}</font>
+        ~ContextLocal<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="green">// clean all context</font>
+            <font color="blue">foreach</font><font color="black">(</font>OpenGLContext ctxt <font color="blue">in</font> OpenGLContext.AllContext<font color="black">)</font>
+            <font color="black">{</font>
+                <font color="blue">if</font><font color="black">(</font><font color="black">!</font>ctxt.Valid<font color="black">)</font>
+                    <font color="blue">continue</font>;
+                <font color="blue">object</font><font color="black">[</font><font color="black">]</font> o <font color="black">=</font> <font color="black">(</font><font color="blue">object</font><font color="black">[</font><font color="black">]</font><font color="black">)</font> ctxt.Get<font color="black">(</font><font color="blue">this</font><font color="black">)</font>;
+                <font color="blue">if</font><font color="black">(</font>o <font color="black">!</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font> <font color="black">{</font>
+                    ctxt.Set<font color="black">(</font><font color="blue">this</font>, <font color="blue">null</font><font color="black">)</font>;
+                    <font color="blue">if</font><font color="black">(</font>o<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="blue">is</font> IDisposable<font color="black">)</font>
+                        <font color="black">(</font><font color="black">(</font>IDisposable<font color="black">)</font> o<font color="black">[</font><font color="maroon">0</font><font color="black">]</font><font color="black">)</font>.Dispose<font color="black">(</font><font color="black">)</font>;
+                <font color="black">}</font>
+            <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// set and get the current variable local to the current </font>
+        <font color="green">/// context for this thread. The first time the value</font>
+        <font color="green">/// is acceded, it is inited with its New() method.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">object</font> Value
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> Get<font color="black">(</font>OpenGLContext.Current<font color="black">)</font>; <font color="black">}</font>
+            <font color="blue">set</font> <font color="black">{</font> Set<font color="black">(</font>OpenGLContext.Current, <font color="blue">value</font><font color="black">)</font>; <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">/**
+        * tell wether or not this ContextLocal has already been
+        * initialized for current context. allways return false
+        * when current context is null. &#60;br&#62;
+        * It could be usefull in InitGLContext to test if
+        * diplay list as already been initialised in a shared context
+        */</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">bool</font> Inited
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font> 
+                OpenGLContext ctxt <font color="black">=</font> OpenGLContext.Current;
+                <font color="blue">if</font><font color="black">(</font>ctxt <font color="black">=</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font>
+                    <font color="blue">return</font> <font color="blue">false</font>;
+                <font color="blue">object</font><font color="black">[</font><font color="black">]</font> holder <font color="black">=</font> <font color="black">(</font><font color="blue">object</font><font color="black">[</font><font color="black">]</font><font color="black">)</font> ctxt.Get<font color="black">(</font><font color="blue">this</font><font color="black">)</font>;
+                <font color="blue">if</font><font color="black">(</font>holder <font color="black">=</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font>
+                    <font color="blue">foreach</font><font color="black">(</font>OpenGLContext c2 <font color="blue">in</font> ctxt.SharingContext<font color="black">)</font> <font color="black">{</font>
+                        holder <font color="black">=</font> <font color="black">(</font><font color="blue">object</font><font color="black">[</font><font color="black">]</font><font color="black">)</font> c2.Get<font color="black">(</font><font color="blue">this</font><font color="black">)</font>;
+                        <font color="blue">if</font><font color="black">(</font>holder <font color="black">!</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font> <font color="black">{</font>
+                            ctxt.Set<font color="black">(</font><font color="blue">this</font>, holder<font color="black">)</font>;
+                            <font color="blue">break</font>;
+                        <font color="black">}</font>
+                    <font color="black">}</font>
+                <font color="blue">return</font> holder <font color="black">!</font><font color="black">=</font> <font color="blue">null</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+
+        <font color="green">/**
+        * return the value local to a given context,
+        * allocated on the fly (with New() method), if needed
+        */</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">object</font> Get<font color="black">(</font>OpenGLContext ctxt<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>ctxt <font color="black">=</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font>
+                <font color="blue">return</font> <font color="blue">null</font>;
+            <font color="blue">object</font><font color="black">[</font><font color="black">]</font> holder <font color="black">=</font> <font color="black">(</font><font color="blue">object</font><font color="black">[</font><font color="black">]</font><font color="black">)</font> ctxt.Get<font color="black">(</font><font color="blue">this</font><font color="black">)</font>;
+            <font color="blue">if</font><font color="black">(</font>holder<font color="black">=</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font>
+            <font color="black">{</font>
+                holder <font color="black">=</font> <font color="blue">new</font> <font color="blue">object</font><font color="black">[</font><font color="maroon">1</font><font color="black">]</font>;
+                ctxt.Set<font color="black">(</font><font color="blue">this</font>, holder<font color="black">)</font>;
+                <font color="green">// try { // let error raise ...</font>
+                    holder<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> New<font color="black">(</font><font color="black">)</font>; 
+                <font color="green">// } catch {}</font>
+            <font color="black">}</font>
+            <font color="blue">return</font> holder<font color="black">[</font><font color="maroon">0</font><font color="black">]</font>;
+        <font color="black">}</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// set the value local to this context</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> Set<font color="black">(</font>OpenGLContext ctxt, <font color="blue">object</font> val<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>ctxt <font color="black">=</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font>
+                <font color="blue">return</font>;
+            <font color="blue">object</font><font color="black">[</font><font color="black">]</font> holder <font color="black">=</font> <font color="black">(</font><font color="blue">object</font><font color="black">[</font><font color="black">]</font><font color="black">)</font> ctxt.Get<font color="black">(</font><font color="blue">this</font><font color="black">)</font>;
+            <font color="blue">if</font><font color="black">(</font>holder <font color="black">=</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font> <font color="black">{</font>
+                holder <font color="black">=</font> <font color="blue">new</font> <font color="blue">object</font><font color="black">[</font><font color="maroon">1</font><font color="black">]</font>;
+                ctxt.Set<font color="black">(</font><font color="blue">this</font>, holder<font color="black">)</font>;
+            <font color="black">}</font>
+            holder<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> val;
+        <font color="black">}</font>
+        
+        <font color="green">/** Dispose the value in all context and remove them from
+         * local values table. &#60;br&#62;
+         * end-user should preferably override the context local version */</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> Dispose<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">foreach</font><font color="black">(</font>OpenGLContext ctxt <font color="blue">in</font> OpenGLContext.AllContext<font color="black">)</font> <font color="black">{</font>
+                Dispose<font color="black">(</font>ctxt<font color="black">)</font>;
+                ctxt.Set<font color="black">(</font><font color="blue">this</font>, <font color="blue">null</font><font color="black">)</font>;
+            <font color="black">}</font>
+            GC.SuppressFinalize<font color="black">(</font><font color="blue">this</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/** Dispose of the local value for this context */</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> Dispose<font color="black">(</font>OpenGLContext ctxt<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>ctxt<font color="black">=</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font>
+                <font color="blue">return</font>;
+            <font color="blue">object</font><font color="black">[</font><font color="black">]</font> o <font color="black">=</font> <font color="black">(</font><font color="blue">object</font><font color="black">[</font><font color="black">]</font><font color="black">)</font> ctxt.Get<font color="black">(</font><font color="blue">this</font><font color="black">)</font>;
+            <font color="blue">if</font><font color="black">(</font>o<font color="black">=</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font>
+                <font color="blue">return</font>;
+            <font color="blue">if</font><font color="black">(</font>o<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="blue">is</font> IDisposable<font color="black">)</font> <font color="black">{</font>
+                <font color="black">(</font><font color="black">(</font>IDisposable<font color="black">)</font> o<font color="black">[</font><font color="maroon">0</font><font color="black">]</font><font color="black">)</font>.Dispose<font color="black">(</font><font color="black">)</font>;
+                GC.SuppressFinalize<font color="black">(</font>o<font color="black">[</font><font color="maroon">0</font><font color="black">]</font><font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// create a new instance when first acceded</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">protected</font> <font color="blue">virtual</font> <font color="blue">object</font> New<font color="black">(</font><font color="black">)</font> 
+        <font color="black">{</font>
+            <font color="blue">return</font> <font color="blue">null</font>;
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> GetObjectData<font color="black">(</font>SerializationInfo info, 
+                                          StreamingContext context<font color="black">)</font>
+        <font color="black">{</font><font color="black">}</font>
+        
+        <font color="blue">protected</font> ContextLocal<font color="black">(</font>SerializationInfo info, 
+                               StreamingContext context<font color="black">)</font>
+        <font color="black">{</font><font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

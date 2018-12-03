@@ -1,0 +1,257 @@
+<HTML>
+<HEAD>
+<TITLE>
+Mouse.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Collections;
+<font color="blue">using</font> System.Drawing;
+<font color="blue">using</font> System.Runtime.InteropServices;
+<font color="blue">using</font> System.Text;
+<font color="blue">using</font> System.Windows.Forms;
+
+<font color="blue">namespace</font> CsGL.Util
+<font color="black">{</font>
+    <font color="green">/**
+     * a class to access mouse position from anywhere.
+     * You could also use it to pin the mouse in one position
+     * and just use mouse move delta.&#60;br/&#62;
+     * &#60;p&#62;
+     * It also enable you to create System.Drawing.Cursor object
+     * from a System.Drawing.Bitmap image
+     */</font>
+    <font color="blue">public</font> <font color="blue">class</font> Mouse <font color="black">:</font> CsGL.OSLib
+    <font color="black">{</font>
+        <font color="blue">static</font> Mouse<font color="black">(</font><font color="black">)</font> <font color="black">{</font> CSGLInit<font color="black">(</font><font color="black">)</font>; <font color="black">}</font>
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_mouse_setPos"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> SetPosition<font color="black">(</font><font color="blue">int</font> x, <font color="blue">int</font> y<font color="black">)</font>;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_mouse_getPos"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> GetPosition<font color="black">(</font><font color="blue">out</font> <font color="blue">int</font> x, <font color="blue">out</font> <font color="blue">int</font> y<font color="black">)</font>;
+        
+        <font color="green">// ------------ HOOK & listener ----------</font>
+        <font color="blue">public</font> <font color="blue">enum</font> EventType <font color="black">:</font> <font color="blue">byte</font>
+        <font color="black">{</font>
+            DOWN  <font color="black">=</font> <font color="maroon">0</font>,
+            UP    <font color="black">=</font> <font color="maroon">1</font>,
+            MOVE  <font color="black">=</font> <font color="maroon">2</font>,
+            <font color="green">/** event generated when the mouse wheel is rolled */</font>
+            WHEEL <font color="black">=</font> <font color="maroon">3</font>
+        <font color="black">}</font>
+        <font color="black">[</font>StructLayout<font color="black">(</font>LayoutKind.Sequential<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">struct</font> Event
+        <font color="black">{</font>
+            <font color="green">/** the type of event */</font>
+            <font color="blue">public</font> EventType type;
+            <font color="green">/** current screen coordinat of the mouse */</font>
+            <font color="blue">public</font> <font color="blue">int</font> x,y; 
+            <font color="green">/** if event is UP or DOWN indicate the button. mouse wheel is 3 */</font>
+            <font color="blue">public</font> <font color="blue">int</font> button; 
+            <font color="green">/** in case of DOWN event indicate the number of clic */</font>
+            <font color="blue">public</font> <font color="blue">int</font> clicCount;
+            <font color="green">/** if event is WHEEL the amount scrolled with mouse wheel */</font>
+            <font color="blue">public</font> <font color="blue">int</font> wheel;
+            <font color="blue">private</font> IntPtr hwnd;
+            
+            <font color="green">/** the control target by this keyboard event */</font>
+            <font color="blue">public</font> Control Control
+            <font color="black">{</font>
+                <font color="blue">get</font> <font color="black">{</font> 
+                    <font color="blue">if</font><font color="black">(</font>hwnd<font color="black">=</font><font color="black">=</font>IntPtr.Zero<font color="black">)</font>
+                        <font color="blue">return</font> <font color="blue">null</font>;
+                    <font color="blue">return</font> Control.FromHandle<font color="black">(</font>hwnd<font color="black">)</font>; 
+                <font color="black">}</font>
+            <font color="black">}</font>
+            <font color="green">/** the location of the mouse in targeted control coordinate */</font>
+            <font color="blue">public</font> Point ControlLocation
+            <font color="black">{</font>
+                <font color="blue">get</font> <font color="black">{</font>
+                    Control c <font color="black">=</font> Control;
+                    <font color="blue">if</font><font color="black">(</font>c<font color="black">=</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font>
+                        <font color="blue">return</font> <font color="blue">new</font> Point<font color="black">(</font>x, y<font color="black">)</font>;
+                    Point p <font color="black">=</font> c.PointToScreen<font color="black">(</font><font color="blue">new</font> Point<font color="black">(</font><font color="maroon">0</font>, <font color="maroon">0</font><font color="black">)</font><font color="black">)</font>;
+                    p.X <font color="black">-</font><font color="black">=</font> x;
+                    p.Y <font color="black">-</font><font color="black">=</font> y;
+                    <font color="blue">return</font> p;
+                <font color="black">}</font>
+            <font color="black">}</font>
+            
+            <font color="blue">public</font> <font color="blue">override</font> string ToString<font color="black">(</font><font color="black">)</font>
+            <font color="black">{</font>
+                StringBuilder sb <font color="black">=</font> <font color="blue">new</font> StringBuilder<font color="black">(</font><font color="black">)</font>;
+                sb.Append<font color="black">(</font><font color="marooon">"Mouse+Event("</font><font color="black">)</font>;
+                sb.Append<font color="black">(</font>x<font color="black">)</font>;
+                sb.Append<font color="black">(</font><font color="marooon">'x'</font><font color="black">)</font>;
+                sb.Append<font color="black">(</font>y<font color="black">)</font>;
+                sb.Append<font color="black">(</font><font color="marooon">' '</font><font color="black">)</font>;
+                sb.Append<font color="black">(</font>type<font color="black">)</font>;
+                <font color="blue">switch</font><font color="black">(</font>type<font color="black">)</font> <font color="black">{</font>
+                    <font color="blue">case</font> EventType.DOWN<font color="black">:</font>
+                        sb.Append<font color="black">(</font><font color="marooon">'_'</font><font color="black">)</font>;
+                        sb.Append<font color="black">(</font>button<font color="black">)</font>;
+                        sb.Append<font color="black">(</font><font color="marooon">' '</font><font color="black">)</font>;
+                        sb.Append<font color="black">(</font>clicCount<font color="black">)</font>;
+                        <font color="blue">break</font>;
+                    <font color="blue">case</font> EventType.UP<font color="black">:</font>
+                        sb.Append<font color="black">(</font><font color="marooon">'_'</font><font color="black">)</font>;
+                        sb.Append<font color="black">(</font>button<font color="black">)</font>;
+                        <font color="blue">break</font>;
+                    <font color="blue">case</font> EventType.WHEEL<font color="black">:</font>
+                        sb.Append<font color="black">(</font><font color="marooon">' '</font><font color="black">)</font>;
+                        sb.Append<font color="black">(</font>wheel<font color="black">)</font>;
+                        <font color="blue">break</font>;
+                <font color="black">}</font>
+                sb.Append<font color="black">(</font><font color="marooon">')'</font><font color="black">)</font>;
+                <font color="blue">return</font> sb.ToString<font color="black">(</font><font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> Hook<font color="black">(</font>Event me<font color="black">)</font>;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> csgl_mouse_hook<font color="black">(</font>Hook hook<font color="black">)</font>;
+        
+        <font color="blue">static</font> ArrayList hooks;
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> AddListener<font color="black">(</font>Hook fct<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>hooks<font color="black">=</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font> <font color="black">{</font>
+                CSGLInit<font color="black">(</font><font color="black">)</font>;
+                hooks <font color="black">=</font> <font color="blue">new</font> ArrayList<font color="black">(</font><font color="black">)</font>;
+                mouseHook <font color="black">=</font> <font color="blue">new</font> Hook<font color="black">(</font>SysHook<font color="black">)</font>;
+                csgl_mouse_hook<font color="black">(</font>mouseHook<font color="black">)</font>;
+            <font color="black">}</font>
+            hooks.Add<font color="black">(</font>fct<font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> RemoveListener<font color="black">(</font>Hook fct<font color="black">)</font> 
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>hooks<font color="black">!</font><font color="black">=</font><font color="blue">null</font><font color="black">)</font>
+                hooks.Remove<font color="black">(</font>fct<font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="blue">private</font> <font color="blue">static</font> Hook mouseHook;
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> SysHook<font color="black">(</font>Event e<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">foreach</font><font color="black">(</font>Hook h <font color="blue">in</font> hooks<font color="black">)</font>
+                try <font color="black">{</font> h<font color="black">(</font>e<font color="black">)</font>; <font color="black">}</font>
+                <font color="blue">catch</font><font color="black">(</font>Exception ex<font color="black">)</font> <font color="black">{</font>
+                    Console.Error.WriteLine<font color="black">(</font>ex<font color="black">)</font>;
+                    Console.Error.WriteLine<font color="black">(</font>ex.StackTrace<font color="black">)</font>;
+                <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">// --------- CURSOR method  ----------</font>
+        <font color="black">[</font>DllImport<font color="black">(</font>CsGL.OSLib.CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_mouse_destroyCursor"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> DestroyCursor<font color="black">(</font>IntPtr hCursor<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>CsGL.OSLib.CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_mouse_createCursor"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> IntPtr CreateCursor<font color="black">(</font>IntPtr hBitmap, <font color="blue">int</font> x, <font color="blue">int</font> y<font color="black">)</font>;
+
+        <font color="green">/** return the maximum size an image should be to be used as a cursor */</font>        
+        <font color="black">[</font>DllImport<font color="black">(</font>CsGL.OSLib.CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_mouse_getCursorSize"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> GetMaximumCursorSize<font color="black">(</font><font color="blue">out</font> <font color="blue">int</font> x, <font color="blue">out</font> <font color="blue">int</font> y<font color="black">)</font>;
+
+        <font color="green">/**
+         * This method create a cursor from a bitmap. provided you
+         * furnish with a bitmap of an acceptable system size.
+         * &#60;p&#62;
+         * You should call DestroyCursor(..) on this cursor when 
+         * you no longer need it
+         * @param x the x-coordinate of the hot spot
+         * @param y the y-coordinate of the hot spot
+         */</font>
+        <font color="blue">public</font> <font color="blue">static</font> Cursor CreateCursor<font color="black">(</font>Bitmap img, <font color="blue">int</font> x, <font color="blue">int</font> y<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">return</font> <font color="blue">new</font> Cursor<font color="black">(</font>CreateCursor<font color="black">(</font>img.GetHbitmap<font color="black">(</font><font color="black">)</font>, x, y<font color="black">)</font><font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="green">/**
+         * Destroy a cursor. This method should only be called
+         * on unused cursor created by Mouse.CreateCursor(..).
+         * &#60;br&#62;
+         * I am sorry to not provide a more witty implementation
+         * but Cursor is a sealed class, I can't help.
+         */</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> DestroyCursor<font color="black">(</font>Cursor cur<font color="black">)</font> 
+        <font color="black">{</font>
+            DestroyCursor<font color="black">(</font>cur.Handle<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        
+        <font color="green">// --------- INSTANCE method ---------</font>
+        <font color="blue">int</font> lastX, lastY;
+        <font color="blue">bool</font> warp <font color="black">=</font> <font color="blue">false</font>;
+        <font color="blue">private</font> <font color="blue">void</font> spyMouse<font color="black">(</font>Event e<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>e.button<font color="black">=</font><font color="black">=</font><font color="maroon">-1</font> <font color="black">&</font><font color="black">&</font> lastX<font color="black">=</font><font color="black">=</font>e.x <font color="black">&</font><font color="black">&</font> lastY<font color="black">=</font><font color="black">=</font>e.y<font color="black">)</font>
+                <font color="blue">return</font>;
+            
+            <font color="blue">int</font> dx <font color="black">=</font> e.x <font color="black">-</font>lastX;
+            <font color="blue">int</font> dy <font color="black">=</font> e.y <font color="black">-</font>lastY;
+            <font color="blue">if</font><font color="black">(</font>warp<font color="black">)</font> <font color="black">{</font>
+                <font color="blue">if</font><font color="black">(</font>dx<font color="black">!</font><font color="black">=</font><font color="maroon">0</font> <font color="black">&</font><font color="black">&</font> dy<font color="black">!</font><font color="black">=</font><font color="maroon">0</font><font color="black">)</font> <font color="black">{</font>
+                    SetPosition<font color="black">(</font>lastX, lastY<font color="black">)</font>;
+                    MouseEvent<font color="black">(</font>e, dx, dy<font color="black">)</font>;
+                <font color="black">}</font>
+                <font color="blue">if</font><font color="black">(</font>dx<font color="black">!</font><font color="black">=</font><font color="maroon">0</font> <font color="black">|</font><font color="black">|</font> dy<font color="black">!</font><font color="black">=</font><font color="maroon">0</font> <font color="black">|</font><font color="black">|</font> e.type<font color="black">!</font><font color="black">=</font>EventType.MOVE<font color="black">)</font>
+                    MouseEvent<font color="black">(</font>e, dx, dy<font color="black">)</font>;
+            <font color="black">}</font>
+            <font color="blue">else</font> <font color="black">{</font>
+                lastX <font color="black">=</font> e.x;
+                lastY <font color="black">=</font> e.y;
+                MouseEvent<font color="black">(</font>e, dx, dy<font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> MouseEvent<font color="black">(</font>Event e, <font color="blue">int</font> dx, <font color="blue">int</font> dy<font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">void</font> WarpAt<font color="black">(</font><font color="blue">int</font> x, <font color="blue">int</font> y<font color="black">)</font>
+        <font color="black">{</font>
+            lastX <font color="black">=</font> x;
+            lastY <font color="black">=</font> y;
+            SetPosition<font color="black">(</font>x, y<font color="black">)</font>;
+            warp <font color="black">=</font> <font color="blue">true</font>;
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">void</font> Unwarp<font color="black">(</font><font color="black">)</font> <font color="black">{</font> warp <font color="black">=</font> <font color="blue">false</font>; <font color="black">}</font>
+        <font color="blue">public</font> Mouse<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            AddListener<font color="black">(</font><font color="blue">new</font> Hook<font color="black">(</font>spyMouse<font color="black">)</font><font color="black">)</font>;
+            GetPosition<font color="black">(</font><font color="blue">out</font> lastX, <font color="blue">out</font> lastY<font color="black">)</font>;
+        <font color="black">}</font>
+        ~Mouse<font color="black">(</font><font color="black">)</font> <font color="black">{</font> RemoveListener<font color="black">(</font><font color="blue">new</font> Hook<font color="black">(</font>spyMouse<font color="black">)</font><font color="black">)</font>; <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

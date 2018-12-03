@@ -1,0 +1,92 @@
+<HTML>
+<HEAD>
+<TITLE>
+RUInt16.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Runtime.InteropServices;
+
+<font color="blue">namespace</font> CsGL.Pointers
+<font color="black">{</font>
+    <font color="green">/**
+     * Simple struct layout for uint16 (ushort, 2 bytes).
+     */</font>
+    <font color="black">[</font>StructLayout<font color="black">(</font>LayoutKind.Sequential<font color="black">)</font><font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">unsafe</font> <font color="blue">struct</font> RUInt16
+    <font color="black">{</font>
+        <font color="green">/**
+         * ushort pointer.
+         */</font>
+        <font color="blue">ushort</font><font color="black">*</font> data;
+        
+        <font color="green">/**
+         * Constructor/Initializer with IntPtr p.
+         * @param p Creates ushort pointer.
+         */</font>
+        <font color="blue">public</font> RUInt16<font color="black">(</font>IntPtr p<font color="black">)</font> <font color="black">{</font> data <font color="black">=</font> <font color="black">(</font><font color="blue">ushort</font><font color="black">*</font><font color="black">)</font><font color="black">(</font><font color="blue">void</font><font color="black">*</font><font color="black">)</font> p; <font color="black">}</font>
+
+        <font color="green">/**
+         * Array accessor.
+         * @param index Index to the ushort to get/set.
+         */</font>
+        <font color="blue">public</font> <font color="blue">ushort</font> <font color="blue">this</font><font color="black">[</font><font color="blue">int</font> index<font color="black">]</font>
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> data<font color="black">[</font>index<font color="black">]</font>; <font color="black">}</font>
+            <font color="blue">set</font> <font color="black">{</font> data<font color="black">[</font>index<font color="black">]</font> <font color="black">=</font> <font color="blue">value</font>; <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">explicit</font> <font color="blue">operator</font> IntPtr<font color="black">(</font>RUInt16 p<font color="black">)</font> <font color="black">{</font> <font color="blue">return</font> <font color="black">(</font>IntPtr<font color="black">)</font> p.data; <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">explicit</font> <font color="blue">operator</font> RUInt16<font color="black">(</font>IntPtr p<font color="black">)</font> <font color="black">{</font> <font color="blue">return</font> <font color="blue">new</font> RUInt16<font color="black">(</font>p<font color="black">)</font>; <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">static</font> RUInt16 <font color="blue">operator</font><font color="black">+</font><font color="black">(</font>RUInt16 p, <font color="blue">int</font> index<font color="black">)</font>
+        <font color="black">{</font>
+            RUInt16 ret;
+            ret.data <font color="black">=</font> p.data <font color="black">+</font> index;
+            <font color="blue">return</font> ret;
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">static</font> RUInt16 <font color="blue">operator</font><font color="black">-</font><font color="black">(</font>RUInt16 p, <font color="blue">int</font> index<font color="black">)</font>
+        <font color="black">{</font>
+            RUInt16 ret;
+            ret.data <font color="black">=</font> p.data <font color="black">-</font>index;
+            <font color="blue">return</font> ret;
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">int</font> <font color="blue">operator</font><font color="black">-</font><font color="black">(</font>RUInt16 a, RUInt16 b<font color="black">)</font> <font color="black">{</font> <font color="blue">return</font> <font color="black">(</font><font color="blue">int</font><font color="black">)</font> <font color="black">(</font>a.data <font color="black">-</font>b.data<font color="black">)</font>; <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

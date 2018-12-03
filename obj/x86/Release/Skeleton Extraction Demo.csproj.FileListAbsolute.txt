@@ -1,0 +1,14 @@
+W:\Csharp\W_csharp\Skeleton Extraction Demo\bin\x86\Release\Skeleton Extraction Demo.exe.config
+W:\Csharp\W_csharp\Skeleton Extraction Demo\bin\x86\Release\csgl.dll
+W:\Csharp\W_csharp\Skeleton Extraction Demo\bin\x86\Release\csgl.native.dll
+W:\Csharp\W_csharp\Skeleton Extraction Demo\bin\x86\Release\taucs.dll
+W:\Csharp\W_csharp\Skeleton Extraction Demo\bin\x86\Release\Skeleton Extraction Demo.exe
+W:\Csharp\W_csharp\Skeleton Extraction Demo\bin\x86\Release\Skeleton Extraction Demo.pdb
+W:\Csharp\W_csharp\Skeleton Extraction Demo\obj\x86\Release\Skeleton Extraction Demo.csprojResolveAssemblyReference.cache
+W:\Csharp\W_csharp\Skeleton Extraction Demo\obj\x86\Release\IsolineEditing.AboutBox1.resources
+W:\Csharp\W_csharp\Skeleton Extraction Demo\obj\x86\Release\IsolineEditing.FormInput.resources
+W:\Csharp\W_csharp\Skeleton Extraction Demo\obj\x86\Release\IsolineEditing.FormMain.resources
+W:\Csharp\W_csharp\Skeleton Extraction Demo\obj\x86\Release\IsolineEditing.Properties.Resources.resources
+W:\Csharp\W_csharp\Skeleton Extraction Demo\obj\x86\Release\Skeleton Extraction Demo.csproj.GenerateResource.Cache
+W:\Csharp\W_csharp\Skeleton Extraction Demo\obj\x86\Release\Skeleton Extraction Demo.exe
+W:\Csharp\W_csharp\Skeleton Extraction Demo\obj\x86\Release\Skeleton Extraction Demo.pdb

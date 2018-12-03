@@ -1,0 +1,378 @@
+<HTML>
+<HEAD>
+<TITLE>
+GLU.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Text;
+<font color="blue">using</font> System.Runtime.InteropServices;
+<font color="blue">using</font> CsGL.Util;
+<font color="blue">using</font> CsGL.Pointers;
+
+<font color="blue">namespace</font> CsGL.OpenGL
+<font color="black">{</font>
+    <font color="black">[</font>StructLayout<font color="black">(</font>LayoutKind.Sequential<font color="black">)</font><font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">struct</font> GLUnurbs <font color="black">{</font><font color="blue">public</font> IntPtr data;<font color="black">}</font>
+    
+    <font color="black">[</font>StructLayout<font color="black">(</font>LayoutKind.Sequential<font color="black">)</font><font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">struct</font> GLUquadric <font color="black">{</font><font color="blue">public</font> IntPtr data;<font color="black">}</font>
+    
+    <font color="black">[</font>StructLayout<font color="black">(</font>LayoutKind.Sequential<font color="black">)</font><font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">struct</font> GLUtesselator <font color="black">{</font><font color="blue">public</font> IntPtr data;<font color="black">}</font>
+    
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUquadricErrorProc<font color="black">(</font><font color="blue">uint</font> type<font color="black">)</font>;
+    
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessBeginProc<font color="black">(</font><font color="blue">uint</font> type<font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessEdgeFlagProc<font color="black">(</font><font color="blue">byte</font> boolean<font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessVertexProc<font color="black">(</font>IntPtr data<font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessEndProc<font color="black">(</font><font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessErrorProc<font color="black">(</font><font color="blue">uint</font> type<font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessCombineProc<font color="black">(</font><font color="black">[</font>Out<font color="black">]</font><font color="black">[</font>MarshalAs<font color="black">(</font>UnmanagedType.LPArray, SizeConst<font color="black">=</font><font color="maroon">3</font><font color="black">)</font><font color="black">]</font> <font color="blue">double</font><font color="black">[</font><font color="black">]</font> d1,
+                                            <font color="black">[</font>Out<font color="black">]</font><font color="black">[</font>MarshalAs<font color="black">(</font>UnmanagedType.LPArray, SizeConst<font color="black">=</font><font color="maroon">4</font><font color="black">)</font><font color="black">]</font> IntPtr<font color="black">[</font><font color="black">]</font> d2, 
+                                            <font color="black">[</font>Out<font color="black">]</font><font color="black">[</font>MarshalAs<font color="black">(</font>UnmanagedType.LPArray, SizeConst<font color="black">=</font><font color="maroon">4</font><font color="black">)</font><font color="black">]</font> <font color="blue">float</font><font color="black">[</font><font color="black">]</font> d3,
+                                            RPVoid d4<font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessCombineProc2<font color="black">(</font>RDouble d1,
+                                             RPVoid d2, 
+                                             RFloat d3,
+                                             RPVoid d4<font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessBeginDataProc<font color="black">(</font><font color="blue">uint</font> type, IntPtr d<font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessEdgeFlagDataProc<font color="black">(</font><font color="blue">byte</font> boolTest, IntPtr data<font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessVertexDataProc<font color="black">(</font>IntPtr d1, IntPtr d2<font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessEndDataProc<font color="black">(</font>IntPtr p<font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessErrorDataProc<font color="black">(</font><font color="blue">uint</font> type, IntPtr p<font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessCombineDataProc<font color="black">(</font><font color="black">[</font>Out<font color="black">]</font><font color="black">[</font>MarshalAs<font color="black">(</font>UnmanagedType.LPArray, SizeConst<font color="black">=</font><font color="maroon">3</font><font color="black">)</font><font color="black">]</font><font color="blue">double</font><font color="black">[</font><font color="black">]</font> d1,
+                                                <font color="black">[</font>Out<font color="black">]</font><font color="black">[</font>MarshalAs<font color="black">(</font>UnmanagedType.LPArray, SizeConst<font color="black">=</font><font color="maroon">4</font><font color="black">)</font><font color="black">]</font>IntPtr<font color="black">[</font><font color="black">]</font> d2, 
+                                                <font color="black">[</font>Out<font color="black">]</font><font color="black">[</font>MarshalAs<font color="black">(</font>UnmanagedType.LPArray, SizeConst<font color="black">=</font><font color="maroon">4</font><font color="black">)</font><font color="black">]</font><font color="blue">float</font><font color="black">[</font><font color="black">]</font> d3,
+                                                RPVoid d4,
+                                                IntPtr d5<font color="black">)</font>;
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUtessCombineDataProc2<font color="black">(</font>RDouble d1,
+                                                 RPVoid d2, 
+                                                 RFloat d3,
+                                                 RPVoid d4,
+                                                 IntPtr d5<font color="black">)</font>;
+
+    <font color="green">/* gluNurbsCallback */</font>
+    <font color="blue">public</font> <font color="blue">delegate</font> <font color="blue">void</font> GLUnurbsErrorProc<font color="black">(</font><font color="blue">uint</font> type<font color="black">)</font>;
+    
+    
+    <font color="green">/// &#60;summary&#62;</font>
+    <font color="green">/// this file is simply an export in C# of function defined GL/glu.h</font>
+    <font color="green">/// look at http://www.opengl.org for more info about using OpenGL</font>
+    <font color="green">/// and glu library.</font>
+    <font color="green">/// &#60;/summary&#62;</font>
+    <font color="black">[</font>Serializable<font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">abstract</font> <font color="blue">unsafe</font> <font color="blue">class</font> GLU <font color="black">:</font> OpenGL_Extension
+    <font color="black">{</font>
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_EXT_object_space_tess <font color="black">=</font> <font color="maroon">1</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_EXT_nurbs_tessellator <font color="black">=</font> <font color="maroon">1</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_FALSE <font color="black">=</font> <font color="maroon">0</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TRUE <font color="black">=</font> <font color="maroon">1</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_VERSION_1_1 <font color="black">=</font> <font color="maroon">1</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_VERSION_1_2 <font color="black">=</font> <font color="maroon">1</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_VERSION <font color="black">=</font> <font color="maroon">100800</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_EXTENSIONS <font color="black">=</font> <font color="maroon">100801</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_INVALID_ENUM <font color="black">=</font> <font color="maroon">100900</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_INVALID_VALUE <font color="black">=</font> <font color="maroon">100901</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_OUT_OF_MEMORY <font color="black">=</font> <font color="maroon">100902</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_INCOMPATIBLE_GL_VERSION <font color="black">=</font> <font color="maroon">100903</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_INVALID_OPERATION <font color="black">=</font> <font color="maroon">100904</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_OUTLINE_POLYGON <font color="black">=</font> <font color="maroon">100240</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_OUTLINE_PATCH <font color="black">=</font> <font color="maroon">100241</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_ERROR <font color="black">=</font> <font color="maroon">100103</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR1 <font color="black">=</font> <font color="maroon">100251</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR2 <font color="black">=</font> <font color="maroon">100252</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR3 <font color="black">=</font> <font color="maroon">100253</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR4 <font color="black">=</font> <font color="maroon">100254</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR5 <font color="black">=</font> <font color="maroon">100255</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR6 <font color="black">=</font> <font color="maroon">100256</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR7 <font color="black">=</font> <font color="maroon">100257</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR8 <font color="black">=</font> <font color="maroon">100258</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR9 <font color="black">=</font> <font color="maroon">100259</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR10 <font color="black">=</font> <font color="maroon">100260</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR11 <font color="black">=</font> <font color="maroon">100261</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR12 <font color="black">=</font> <font color="maroon">100262</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR13 <font color="black">=</font> <font color="maroon">100263</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR14 <font color="black">=</font> <font color="maroon">100264</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR15 <font color="black">=</font> <font color="maroon">100265</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR16 <font color="black">=</font> <font color="maroon">100266</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR17 <font color="black">=</font> <font color="maroon">100267</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR18 <font color="black">=</font> <font color="maroon">100268</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR19 <font color="black">=</font> <font color="maroon">100269</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR20 <font color="black">=</font> <font color="maroon">100270</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR21 <font color="black">=</font> <font color="maroon">100271</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR22 <font color="black">=</font> <font color="maroon">100272</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR23 <font color="black">=</font> <font color="maroon">100273</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR24 <font color="black">=</font> <font color="maroon">100274</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR25 <font color="black">=</font> <font color="maroon">100275</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR26 <font color="black">=</font> <font color="maroon">100276</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR27 <font color="black">=</font> <font color="maroon">100277</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR28 <font color="black">=</font> <font color="maroon">100278</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR29 <font color="black">=</font> <font color="maroon">100279</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR30 <font color="black">=</font> <font color="maroon">100280</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR31 <font color="black">=</font> <font color="maroon">100281</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR32 <font color="black">=</font> <font color="maroon">100282</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR33 <font color="black">=</font> <font color="maroon">100283</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR34 <font color="black">=</font> <font color="maroon">100284</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR35 <font color="black">=</font> <font color="maroon">100285</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR36 <font color="black">=</font> <font color="maroon">100286</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_ERROR37 <font color="black">=</font> <font color="maroon">100287</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_AUTO_LOAD_MATRIX <font color="black">=</font> <font color="maroon">100200</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_CULLING <font color="black">=</font> <font color="maroon">100201</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_SAMPLING_TOLERANCE <font color="black">=</font> <font color="maroon">100203</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_DISPLAY_MODE <font color="black">=</font> <font color="maroon">100204</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_PARAMETRIC_TOLERANCE <font color="black">=</font> <font color="maroon">100202</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_SAMPLING_METHOD <font color="black">=</font> <font color="maroon">100205</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_U_STEP <font color="black">=</font> <font color="maroon">100206</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_V_STEP <font color="black">=</font> <font color="maroon">100207</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_OBJECT_PARAMETRIC_ERROR_EXT <font color="black">=</font> <font color="maroon">100208</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_OBJECT_PATH_LENGTH_EXT <font color="black">=</font> <font color="maroon">100209</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_PATH_LENGTH <font color="black">=</font> <font color="maroon">100215</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_PARAMETRIC_ERROR <font color="black">=</font> <font color="maroon">100216</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_DOMAIN_DISTANCE <font color="black">=</font> <font color="maroon">100217</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_MAP1_TRIM_2 <font color="black">=</font> <font color="maroon">100210</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_MAP1_TRIM_3 <font color="black">=</font> <font color="maroon">100211</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_POINT <font color="black">=</font> <font color="maroon">100010</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_LINE <font color="black">=</font> <font color="maroon">100011</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_FILL <font color="black">=</font> <font color="maroon">100012</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_SILHOUETTE <font color="black">=</font> <font color="maroon">100013</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_SMOOTH <font color="black">=</font> <font color="maroon">100000</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_FLAT <font color="black">=</font> <font color="maroon">100001</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NONE <font color="black">=</font> <font color="maroon">100002</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_OUTSIDE <font color="black">=</font> <font color="maroon">100020</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_INSIDE <font color="black">=</font> <font color="maroon">100021</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_BEGIN <font color="black">=</font> <font color="maroon">100100</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_BEGIN <font color="black">=</font> <font color="maroon">100100</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_VERTEX <font color="black">=</font> <font color="maroon">100101</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_VERTEX <font color="black">=</font> <font color="maroon">100101</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_END <font color="black">=</font> <font color="maroon">100102</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_END <font color="black">=</font> <font color="maroon">100102</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_ERROR <font color="black">=</font> <font color="maroon">100103</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_EDGE_FLAG <font color="black">=</font> <font color="maroon">100104</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_EDGE_FLAG <font color="black">=</font> <font color="maroon">100104</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_COMBINE <font color="black">=</font> <font color="maroon">100105</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_BEGIN_DATA <font color="black">=</font> <font color="maroon">100106</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_VERTEX_DATA <font color="black">=</font> <font color="maroon">100107</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_END_DATA <font color="black">=</font> <font color="maroon">100108</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_ERROR_DATA <font color="black">=</font> <font color="maroon">100109</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_EDGE_FLAG_DATA <font color="black">=</font> <font color="maroon">100110</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_COMBINE_DATA <font color="black">=</font> <font color="maroon">100111</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_MODE_EXT <font color="black">=</font> <font color="maroon">100160</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_TESSELLATOR_EXT <font color="black">=</font> <font color="maroon">100161</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_RENDERER_EXT <font color="black">=</font> <font color="maroon">100162</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_BEGIN_EXT <font color="black">=</font> <font color="maroon">100164</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_VERTEX_EXT <font color="black">=</font> <font color="maroon">100165</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_NORMAL_EXT <font color="black">=</font> <font color="maroon">100166</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_COLOR_EXT <font color="black">=</font> <font color="maroon">100167</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_TEX_COORD_EXT <font color="black">=</font> <font color="maroon">100168</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_END_EXT <font color="black">=</font> <font color="maroon">100169</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_BEGIN_DATA_EXT <font color="black">=</font> <font color="maroon">100170</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_VERTEX_DATA_EXT <font color="black">=</font> <font color="maroon">100171</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_NORMAL_DATA_EXT <font color="black">=</font> <font color="maroon">100172</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_COLOR_DATA_EXT <font color="black">=</font> <font color="maroon">100173</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_TEX_COORD_DATA_EXT <font color="black">=</font> <font color="maroon">100174</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_NURBS_END_DATA_EXT <font color="black">=</font> <font color="maroon">100175</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_CW <font color="black">=</font> <font color="maroon">100120</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_CCW <font color="black">=</font> <font color="maroon">100121</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_INTERIOR <font color="black">=</font> <font color="maroon">100122</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_EXTERIOR <font color="black">=</font> <font color="maroon">100123</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_UNKNOWN <font color="black">=</font> <font color="maroon">100124</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_WINDING_RULE <font color="black">=</font> <font color="maroon">100140</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_BOUNDARY_ONLY <font color="black">=</font> <font color="maroon">100141</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_TOLERANCE <font color="black">=</font> <font color="maroon">100142</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_ERROR1 <font color="black">=</font> <font color="maroon">100151</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_ERROR2 <font color="black">=</font> <font color="maroon">100152</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_ERROR3 <font color="black">=</font> <font color="maroon">100153</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_ERROR4 <font color="black">=</font> <font color="maroon">100154</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_ERROR5 <font color="black">=</font> <font color="maroon">100155</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_ERROR6 <font color="black">=</font> <font color="maroon">100156</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_ERROR7 <font color="black">=</font> <font color="maroon">100157</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_ERROR8 <font color="black">=</font> <font color="maroon">100158</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_MISSING_BEGIN_POLYGON <font color="black">=</font> <font color="maroon">100151</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_MISSING_BEGIN_CONTOUR <font color="black">=</font> <font color="maroon">100152</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_MISSING_END_POLYGON <font color="black">=</font> <font color="maroon">100153</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_MISSING_END_CONTOUR <font color="black">=</font> <font color="maroon">100154</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_COORD_TOO_LARGE <font color="black">=</font> <font color="maroon">100155</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_NEED_COMBINE_CALLBACK <font color="black">=</font> <font color="maroon">100156</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_WINDING_ODD <font color="black">=</font> <font color="maroon">100130</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_WINDING_NONZERO <font color="black">=</font> <font color="maroon">100131</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_WINDING_POSITIVE <font color="black">=</font> <font color="maroon">100132</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_WINDING_NEGATIVE <font color="black">=</font> <font color="maroon">100133</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">uint</font> GLU_TESS_WINDING_ABS_GEQ_TWO <font color="black">=</font> <font color="maroon">100134</font>;
+        <font color="blue">public</font> <font color="blue">const</font> <font color="blue">double</font> GLU_TESS_MAX_COORD <font color="black">=</font> <font color="maroon">1</font>.0e150;
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluBeginCurve<font color="black">(</font>GLUnurbs nurb<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluBeginPolygon<font color="black">(</font>GLUtesselator tess<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluBeginSurface<font color="black">(</font>GLUnurbs nurb<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluBeginTrim<font color="black">(</font>GLUnurbs nurb<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">int</font> gluBuild1DMipmaps<font color="black">(</font><font color="blue">uint</font> target, <font color="blue">int</font> component, <font color="blue">int</font> width, <font color="blue">uint</font> format, <font color="blue">uint</font> type, <font color="blue">void</font> <font color="black">*</font>data<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">int</font> gluBuild2DMipmaps<font color="black">(</font><font color="blue">uint</font> target, <font color="blue">int</font> component, <font color="blue">int</font> width, <font color="blue">int</font> height, <font color="blue">uint</font> format, <font color="blue">uint</font> type, <font color="blue">void</font> <font color="black">*</font>data<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluCylinder<font color="black">(</font>GLUquadric quad, <font color="blue">double</font> myBase, <font color="blue">double</font> top, <font color="blue">double</font> height, <font color="blue">int</font> slices, <font color="blue">int</font> stacks<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluDeleteNurbsRenderer<font color="black">(</font>GLUnurbs nurb<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluDeleteNurbsTessellatorEXT<font color="black">(</font>GLUnurbs nurb<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluDeleteTess<font color="black">(</font>GLUtesselator tess<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluDisk<font color="black">(</font>GLUquadric quad, <font color="blue">double</font> inner, <font color="blue">double</font> outer, <font color="blue">int</font> slices, <font color="blue">int</font> loops<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluEndCurve<font color="black">(</font>GLUnurbs nurb<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluEndPolygon<font color="black">(</font>GLUtesselator tess<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluEndSurface<font color="black">(</font>GLUnurbs nurb<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluEndTrim<font color="black">(</font>GLUnurbs nurb<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">byte</font> <font color="black">*</font> gluErrorString<font color="black">(</font><font color="blue">uint</font> <font color="blue">error</font><font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluGetNurbsProperty<font color="black">(</font>GLUnurbs nurb, <font color="blue">uint</font> property, <font color="blue">float</font><font color="black">*</font> data<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">byte</font> <font color="black">*</font> gluGetString<font color="black">(</font><font color="blue">uint</font> <font color="blue">name</font><font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluGetTessProperty<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, <font color="blue">double</font><font color="black">*</font> data<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluLoadSamplingMatrices<font color="black">(</font>GLUnurbs nurb,  <font color="blue">float</font> <font color="black">*</font>model, <font color="blue">float</font> <font color="black">*</font>perspective, <font color="blue">int</font> <font color="black">*</font>view<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluLookAt<font color="black">(</font><font color="blue">double</font> eyeX, <font color="blue">double</font> eyeY, <font color="blue">double</font> eyeZ, <font color="blue">double</font> centerX, <font color="blue">double</font> centerY, <font color="blue">double</font> centerZ, <font color="blue">double</font> upX, <font color="blue">double</font> upY, <font color="blue">double</font> upZ<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> GLUnurbs gluNewNurbsRenderer<font color="black">(</font><font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> GLUquadric gluNewQuadric<font color="black">(</font><font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluDeleteQuadric<font color="black">(</font>GLUquadric quad<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> GLUtesselator gluNewTess<font color="black">(</font><font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluNextContour<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> type<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluNurbsCallback<font color="black">(</font>GLUnurbs nurb, <font color="blue">uint</font> which, <font color="blue">void</font><font color="black">*</font> CallBackFunc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluNurbsCallback<font color="black">(</font>GLUnurbs nurb, <font color="blue">uint</font> which, GLUnurbsErrorProc CallBackFunc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluNurbsCurve<font color="black">(</font>GLUnurbs nurb, <font color="blue">int</font> knotCount, <font color="blue">float</font> <font color="black">*</font>knots, <font color="blue">int</font> stride, <font color="blue">float</font> <font color="black">*</font>control, <font color="blue">int</font> order, <font color="blue">uint</font> type<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluNurbsProperty<font color="black">(</font>GLUnurbs nurb, <font color="blue">uint</font> property, <font color="blue">float</font> val<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluNurbsSurface<font color="black">(</font>GLUnurbs nurb, <font color="blue">int</font> sKnotCount, <font color="blue">float</font><font color="black">*</font> sKnots, <font color="blue">int</font> tKnotCount, <font color="blue">float</font><font color="black">*</font> tKnots, <font color="blue">int</font> sStride, <font color="blue">int</font> tStride, <font color="blue">float</font><font color="black">*</font> control, <font color="blue">int</font> sOrder, <font color="blue">int</font> tOrder, <font color="blue">uint</font> type<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluOrtho2D<font color="black">(</font><font color="blue">double</font> left, <font color="blue">double</font> right, <font color="blue">double</font> bottom, <font color="blue">double</font> top<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluPartialDisk<font color="black">(</font>GLUquadric quad, <font color="blue">double</font> inner, <font color="blue">double</font> outer, <font color="blue">int</font> slices, <font color="blue">int</font> loops, <font color="blue">double</font> start, <font color="blue">double</font> sweep<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluPerspective<font color="black">(</font><font color="blue">double</font> fovy, <font color="blue">double</font> aspect, <font color="blue">double</font> zNear, <font color="blue">double</font> zFar<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluPickMatrix<font color="black">(</font><font color="blue">double</font> x, <font color="blue">double</font> y, <font color="blue">double</font> delX, <font color="blue">double</font> delY, <font color="blue">int</font> <font color="black">*</font>viewport<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">int</font> gluProject<font color="black">(</font><font color="blue">double</font> objX, <font color="blue">double</font> objY, <font color="blue">double</font> objZ, <font color="blue">double</font> <font color="black">*</font>model, <font color="blue">double</font> <font color="black">*</font>proj, <font color="blue">int</font> <font color="black">*</font>view, <font color="blue">double</font><font color="black">*</font> winX, <font color="blue">double</font><font color="black">*</font> winY, <font color="blue">double</font><font color="black">*</font> winZ<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluPwlCurve<font color="black">(</font>GLUquadric nurb, <font color="blue">int</font> count, <font color="blue">float</font><font color="black">*</font> data, <font color="blue">int</font> stride, <font color="blue">uint</font> type<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluQuadricCallback<font color="black">(</font>GLUquadric quad, <font color="blue">uint</font> which, <font color="blue">void</font><font color="black">*</font> CallBackFunc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluQuadricCallback<font color="black">(</font>GLUquadric quad, <font color="blue">uint</font> which, GLUquadricErrorProc CallBackFunc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluQuadricDrawStyle<font color="black">(</font>GLUquadric quad, <font color="blue">uint</font> draw<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluQuadricNormals<font color="black">(</font>GLUquadric quad, <font color="blue">uint</font> normal<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluQuadricOrientation<font color="black">(</font>GLUquadric quad, <font color="blue">uint</font> orientation<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluQuadricTexture<font color="black">(</font>GLUquadric quad, <font color="blue">byte</font> texture<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">int</font> gluScaleImage<font color="black">(</font><font color="blue">uint</font> format, <font color="blue">int</font> wIn, <font color="blue">int</font> hIn, <font color="blue">uint</font> typeIn, <font color="blue">void</font> <font color="black">*</font>dataIn, <font color="blue">int</font> wOut, <font color="blue">int</font> hOut, <font color="blue">uint</font> typeOut, <font color="blue">void</font><font color="black">*</font> dataOut<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluSphere<font color="black">(</font>GLUquadric quad, <font color="blue">double</font> radius, <font color="blue">int</font> slices, <font color="blue">int</font> stacks<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessBeginContour<font color="black">(</font>GLUtesselator tess<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessBeginPolygon<font color="black">(</font>GLUtesselator tess, <font color="blue">void</font><font color="black">*</font> data<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, <font color="blue">void</font><font color="black">*</font> proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessBeginProc proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessEdgeFlagProc proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessVertexProc proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessEndProc proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessErrorProc proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessCombineProc proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessCombineProc2 proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessBeginDataProc proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessEdgeFlagDataProc proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessVertexDataProc proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessEndDataProc proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessErrorDataProc proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessCombineDataProc proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessCallback<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, GLUtessCombineDataProc2 proc<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessEndContour<font color="black">(</font>GLUtesselator tess<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessEndPolygon<font color="black">(</font>GLUtesselator tess<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessNormal<font color="black">(</font>GLUtesselator tess, <font color="blue">double</font> valueX, <font color="blue">double</font> valueY, <font color="blue">double</font> valueZ<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessProperty<font color="black">(</font>GLUtesselator tess, <font color="blue">uint</font> which, <font color="blue">double</font> data<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> gluTessVertex<font color="black">(</font>GLUtesselator tess, <font color="blue">double</font> <font color="black">*</font>location, <font color="blue">void</font><font color="black">*</font> data<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>GLU_LIB, CallingConvention<font color="black">=</font>CallingConvention.Winapi<font color="black">)</font><font color="black">]</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">int</font> gluUnProject<font color="black">(</font><font color="blue">double</font> winX, <font color="blue">double</font> winY, <font color="blue">double</font> winZ, <font color="blue">double</font> <font color="black">*</font>model, <font color="blue">double</font> <font color="black">*</font>proj, <font color="blue">int</font> <font color="black">*</font>view, <font color="blue">double</font><font color="black">*</font> objX, <font color="blue">double</font><font color="black">*</font> objY, <font color="blue">double</font><font color="black">*</font> objZ<font color="black">)</font>;
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

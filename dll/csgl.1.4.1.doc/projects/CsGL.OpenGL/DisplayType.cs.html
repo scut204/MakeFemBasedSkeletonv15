@@ -1,0 +1,271 @@
+<HTML>
+<HEAD>
+<TITLE>
+DisplayType.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Collections;
+<font color="blue">using</font> System.Text;
+<font color="blue">using</font> System.Threading;
+<font color="blue">using</font> System.Runtime.InteropServices;
+
+<font color="blue">namespace</font> CsGL.OpenGL
+<font color="black">{</font>
+    <font color="green">/**
+     * a class to describe some flag of the OpenGL surface.
+     */</font>
+    <font color="black">[</font>Serializable<font color="black">]</font>
+    <font color="black">[</font>Flags<font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">enum</font> DisplayFlags <font color="black">:</font> <font color="blue">int</font>
+    <font color="black">{</font>
+        DOUBLEBUFFER    <font color="black">=</font> <font color="maroon">0x0001</font>,
+        STEREO          <font color="black">=</font> <font color="maroon">0x0002</font>,
+        DRAW_TO_WINDOW  <font color="black">=</font> <font color="maroon">0x0004</font>,
+        DRAW_TO_BITMAP  <font color="black">=</font> <font color="maroon">0x0008</font>,
+        SUPPORT_GDI     <font color="black">=</font> <font color="maroon">0x0010</font>,
+    <font color="black">}</font>
+    
+    <font color="green">// this structure is also use in C code</font>
+    <font color="green">// defined in csgl_opengl.h file</font>
+    <font color="green">/**
+     * This class describe in platform independant way the 
+     * pixel format of the OpenGL view. use to set it at init
+     * time or to get its desciption later on.
+     */</font>
+    <font color="black">[</font>Serializable<font color="black">]</font>
+    <font color="black">[</font>StructLayout<font color="black">(</font>LayoutKind.Sequential<font color="black">)</font><font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">struct</font> DisplayType
+    <font color="black">{</font>
+        <font color="blue">public</font> DisplayFlags   flags;
+        
+        <font color="green">/** specify if you will use RGBA or color-indexed mode */</font>
+        <font color="blue">public</font> <font color="blue">bool</font> isRgba;
+        
+        <font color="green">/** specify the color depth */</font>
+        <font color="blue">public</font>  <font color="blue">byte</font> cColorBits; 
+        
+        <font color="green">/** specify the red depth */</font>
+        <font color="blue">public</font>  <font color="blue">byte</font> cRedBits; 
+        
+        <font color="green">/** specify the green depth */</font>
+        <font color="blue">public</font>  <font color="blue">byte</font> cGreenBits; 
+        
+        <font color="green">/** specify the blue depth */</font>
+        <font color="blue">public</font>  <font color="blue">byte</font> cBlueBits; 
+        
+        <font color="green">/** specify the alpha depth */</font>
+        <font color="blue">public</font>  <font color="blue">byte</font> cAlphaBits; 
+        
+        <font color="green">/** specify the accumulation buffer size */</font>
+        <font color="blue">public</font>  <font color="blue">byte</font> cAccumBits; 
+        
+        <font color="green">/** specify the number of red bit in accumulation buffer */</font>
+        <font color="blue">public</font>  <font color="blue">byte</font> cAccumRedBits; 
+        
+        <font color="green">/** specify the number of green bit in accumulation buffer */</font>
+        <font color="blue">public</font>  <font color="blue">byte</font> cAccumGreenBits; 
+        
+        <font color="green">/** specify the number of blue bit in accumulation buffer */</font>
+        <font color="blue">public</font>  <font color="blue">byte</font> cAccumBlueBits; 
+        
+        <font color="green">/** specify the number of alpha bit in accumulation buffer */</font>
+        <font color="blue">public</font>  <font color="blue">byte</font> cAccumAlphaBits; 
+        
+        <font color="green">/** specify the number of bit of the z buffer */</font>
+        <font color="blue">public</font>  <font color="blue">byte</font> cDepthBits; 
+        
+        <font color="green">/** specify the number of bit of the stencil buffer */</font>
+        <font color="blue">public</font>  <font color="blue">byte</font> cStencilBits; 
+        
+        
+        <font color="blue">public</font> DisplayType<font color="black">(</font><font color="blue">byte</font> aCDepth, <font color="blue">byte</font> aZDepth<font color="black">)</font> 
+            <font color="black">:</font> <font color="blue">this</font><font color="black">(</font>aCDepth, aZDepth, <font color="maroon">0</font>, <font color="maroon">0</font><font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+                    
+        <font color="blue">public</font> DisplayType<font color="black">(</font><font color="blue">byte</font> aCDepth, <font color="blue">byte</font> aZDepth, 
+                           <font color="blue">byte</font> aStencilDepth, <font color="blue">byte</font> anAccumDepth<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">this</font> <font color="black">=</font> <font color="blue">new</font> DisplayType<font color="black">(</font><font color="black">)</font>;
+            
+            flags <font color="black">=</font> DisplayFlags.DOUBLEBUFFER<font color="black">|</font>DisplayFlags.DRAW_TO_WINDOW;
+            isRgba <font color="black">=</font> <font color="blue">true</font>;
+            cColorBits <font color="black">=</font> aCDepth;
+            cAccumBits <font color="black">=</font> anAccumDepth;
+            cDepthBits <font color="black">=</font> aZDepth;
+            cStencilBits <font color="black">=</font> aStencilDepth;
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> DisplayType<font color="black">(</font>DisplayFlags someFlags, <font color="blue">bool</font> IsRGB<font color="black">)</font>
+            <font color="black">:</font> <font color="blue">this</font><font color="black">(</font>someFlags, IsRGB, <font color="maroon">0</font>, <font color="maroon">0</font>, <font color="maroon">0</font>, <font color="maroon">0</font><font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+        <font color="blue">public</font> DisplayType<font color="black">(</font>DisplayFlags someFlags, <font color="blue">bool</font> IsRGB,
+                           <font color="blue">byte</font> aCDepth, <font color="blue">byte</font> aZDepth,
+                           <font color="blue">byte</font> aStencilDepth, <font color="blue">byte</font> anAccumDepth<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="green">// init all to 0</font>
+            <font color="blue">this</font> <font color="black">=</font> <font color="blue">new</font> DisplayType<font color="black">(</font><font color="black">)</font>;
+            
+            flags <font color="black">=</font> someFlags;
+            isRgba <font color="black">=</font> IsRGB;
+            cColorBits <font color="black">=</font> aCDepth;
+            cAccumBits <font color="black">=</font> anAccumDepth;
+            cDepthBits <font color="black">=</font> aZDepth;
+            cStencilBits <font color="black">=</font> aStencilDepth;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> string ToString<font color="black">(</font>DisplayFlags flags<font color="black">)</font>
+        <font color="black">{</font>
+            StringBuilder sb <font color="black">=</font> <font color="blue">new</font> StringBuilder<font color="black">(</font><font color="black">)</font>;
+            <font color="blue">int</font> i<font color="black">=</font><font color="maroon">0</font>;
+            <font color="blue">if</font><font color="black">(</font><font color="black">(</font>flags<font color="black">&</font>DisplayFlags.DOUBLEBUFFER<font color="black">)</font> <font color="black">!</font><font color="black">=</font> <font color="maroon">0</font><font color="black">)</font> <font color="black">{</font>
+                i<font color="black">+</font><font color="black">+</font>;
+                sb.Append<font color="black">(</font><font color="marooon">"DOUBLEBUFFER"</font><font color="black">)</font>;
+            <font color="black">}</font>
+            <font color="blue">if</font><font color="black">(</font><font color="black">(</font>flags<font color="black">&</font>DisplayFlags.STEREO<font color="black">)</font> <font color="black">!</font><font color="black">=</font> <font color="maroon">0</font><font color="black">)</font> <font color="black">{</font>
+                <font color="blue">if</font><font color="black">(</font>i<font color="black">!</font><font color="black">=</font><font color="maroon">0</font><font color="black">)</font> sb.Append<font color="black">(</font><font color="marooon">"|"</font><font color="black">)</font>;
+                i<font color="black">+</font><font color="black">+</font>;
+                sb.Append<font color="black">(</font><font color="marooon">"STEREO"</font><font color="black">)</font>;
+            <font color="black">}</font>
+            <font color="blue">if</font><font color="black">(</font><font color="black">(</font>flags<font color="black">&</font>DisplayFlags.DRAW_TO_WINDOW<font color="black">)</font> <font color="black">!</font><font color="black">=</font> <font color="maroon">0</font><font color="black">)</font> <font color="black">{</font>
+                <font color="blue">if</font><font color="black">(</font>i<font color="black">!</font><font color="black">=</font><font color="maroon">0</font><font color="black">)</font> sb.Append<font color="black">(</font><font color="marooon">"|"</font><font color="black">)</font>;
+                i<font color="black">+</font><font color="black">+</font>;
+                sb.Append<font color="black">(</font><font color="marooon">"DRAW_TO_WINDOW"</font><font color="black">)</font>;
+            <font color="black">}</font>
+            <font color="blue">if</font><font color="black">(</font><font color="black">(</font>flags<font color="black">&</font>DisplayFlags.DRAW_TO_BITMAP<font color="black">)</font> <font color="black">!</font><font color="black">=</font> <font color="maroon">0</font><font color="black">)</font> <font color="black">{</font>
+                <font color="blue">if</font><font color="black">(</font>i<font color="black">!</font><font color="black">=</font><font color="maroon">0</font><font color="black">)</font> sb.Append<font color="black">(</font><font color="marooon">"|"</font><font color="black">)</font>;
+                i<font color="black">+</font><font color="black">+</font>;
+                sb.Append<font color="black">(</font><font color="marooon">"DRAW_TO_BITMAP"</font><font color="black">)</font>;
+            <font color="black">}</font>
+            <font color="blue">if</font><font color="black">(</font><font color="black">(</font>flags<font color="black">&</font>DisplayFlags.SUPPORT_GDI<font color="black">)</font> <font color="black">!</font><font color="black">=</font> <font color="maroon">0</font><font color="black">)</font> <font color="black">{</font>
+                <font color="blue">if</font><font color="black">(</font>i<font color="black">!</font><font color="black">=</font><font color="maroon">0</font><font color="black">)</font> sb.Append<font color="black">(</font><font color="marooon">"|"</font><font color="black">)</font>;
+                i<font color="black">+</font><font color="black">+</font>;
+                sb.Append<font color="black">(</font><font color="marooon">"SUPPORT_GDI"</font><font color="black">)</font>;
+            <font color="black">}</font>
+            <font color="blue">return</font> sb.ToString<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">override</font> string ToString<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            StringBuilder sb <font color="black">=</font> <font color="blue">new</font> StringBuilder<font color="black">(</font><font color="black">)</font>;
+            sb.Append<font color="black">(</font><font color="marooon">"DisplayType\n{"</font><font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tflags           : {0}\n"</font>, ToString<font color="black">(</font>flags<font color="black">)</font><font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tisRgba          : {0}\n"</font>, isRgba<font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tcColorBits      : {0}\n"</font>, cColorBits<font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tcRedBits        : {0}\n"</font>, cRedBits<font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tcGreenBits      : {0}\n"</font>, cGreenBits<font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tcBlueBits       : {0}\n"</font>, cBlueBits<font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tcAlphaBits      : {0}\n"</font>, cAlphaBits<font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tcAccumBits      : {0}\n"</font>, cAccumBits<font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tcAccumRedBits   : {0}\n"</font>, cAccumRedBits<font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tcAccumGreenBits : {0}\n"</font>, cAccumGreenBits<font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tcAccumBlueBits  : {0}\n"</font>, cAccumBlueBits<font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tcAccumAlphaBits : {0}\n"</font>, cAccumAlphaBits<font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tcDepthBits      : {0}\n"</font>, cDepthBits<font color="black">)</font>;
+            sb.AppendFormat<font color="black">(</font><font color="marooon">"\tcStencilBits    : {0}\n"</font>, cStencilBits<font color="black">)</font>;
+            sb.Append<font color="black">(</font><font color="marooon">"}"</font><font color="black">)</font>;
+            <font color="blue">return</font> sb.ToString<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/**
+         * calculate the score of this display type (that mean
+         * if it has a lot of feature or not), the higher, the more feature.
+         * It return -1 if this display doesn't met the requirement, 
+         * a positive 'score' otherwise.
+         */</font>
+        <font color="blue">public</font> <font color="blue">int</font> GetScore<font color="black">(</font>DisplayType requirement<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">int</font> score <font color="black">=</font> <font color="maroon">0</font>;
+            
+            <font color="blue">if</font><font color="black">(</font>isRgba <font color="black">!</font><font color="black">=</font> requirement.isRgba<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            
+            <font color="blue">if</font><font color="black">(</font><font color="black">(</font>flags<font color="black">&</font>requirement.flags<font color="black">)</font> <font color="black">!</font><font color="black">=</font> requirement.flags<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+
+            <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> i<font color="black">=</font><font color="maroon">0</font>; i<font color="black">&#60;</font><font color="maroon">32</font>; i<font color="black">+</font><font color="black">+</font><font color="black">)</font>
+                <font color="blue">if</font><font color="black">(</font><font color="black">(</font> <font color="black">(</font><font color="black">(</font><font color="blue">int</font><font color="black">)</font>flags<font color="black">)</font> <font color="black">&</font> <font color="black">(</font><font color="maroon">1</font><font color="black">&#60;</font><font color="black">&#60;</font>i<font color="black">)</font> <font color="black">)</font> <font color="black">!</font><font color="black">=</font> <font color="maroon">0</font><font color="black">)</font>
+                    score <font color="black">+</font><font color="black">+</font>;
+
+            <font color="blue">if</font><font color="black">(</font>cColorBits <font color="black">&#60;</font> requirement.cColorBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cColorBits;
+            <font color="blue">if</font><font color="black">(</font>cRedBits <font color="black">&#60;</font> requirement.cRedBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cRedBits;
+            <font color="blue">if</font><font color="black">(</font>cGreenBits <font color="black">&#60;</font> requirement.cGreenBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cGreenBits;
+            <font color="blue">if</font><font color="black">(</font>cBlueBits <font color="black">&#60;</font> requirement.cBlueBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cBlueBits;
+            <font color="blue">if</font><font color="black">(</font>cAlphaBits <font color="black">&#60;</font> requirement.cAlphaBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cAlphaBits;
+            <font color="blue">if</font><font color="black">(</font>cAccumBits <font color="black">&#60;</font> requirement.cAccumBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cAccumBits;
+            <font color="blue">if</font><font color="black">(</font>cAccumRedBits <font color="black">&#60;</font> requirement.cAccumRedBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cAccumRedBits;
+            <font color="blue">if</font><font color="black">(</font>cAccumRedBits <font color="black">&#60;</font> requirement.cAccumRedBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cAccumRedBits;
+            <font color="blue">if</font><font color="black">(</font>cAccumGreenBits <font color="black">&#60;</font> requirement.cAccumGreenBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cAccumGreenBits;
+            <font color="blue">if</font><font color="black">(</font>cAccumBlueBits <font color="black">&#60;</font> requirement.cAccumBlueBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cAccumBlueBits;
+            <font color="blue">if</font><font color="black">(</font>cAccumAlphaBits <font color="black">&#60;</font> requirement.cAccumAlphaBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cAccumAlphaBits;
+            <font color="blue">if</font><font color="black">(</font>cDepthBits <font color="black">&#60;</font> requirement.cDepthBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cDepthBits;
+            <font color="blue">if</font><font color="black">(</font>cStencilBits <font color="black">&#60;</font> requirement.cStencilBits<font color="black">)</font>
+                <font color="blue">return</font> <font color="maroon">-1</font>;
+            score <font color="black">+</font><font color="black">=</font> cStencilBits;
+            
+            <font color="blue">return</font> score;
+        <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

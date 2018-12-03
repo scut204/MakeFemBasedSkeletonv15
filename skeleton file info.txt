@@ -1,0 +1,5 @@
+first line: number of skeletal nodes
+
+second line to last line: information of each node, the first three 
+fields are the node position, following with the indices of its adjacent node.
+Note that zero-based indices are used.

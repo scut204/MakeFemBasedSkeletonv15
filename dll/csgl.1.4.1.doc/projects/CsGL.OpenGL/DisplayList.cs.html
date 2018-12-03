@@ -1,0 +1,133 @@
+<HTML>
+<HEAD>
+<TITLE>
+DisplayList.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Collections;
+<font color="blue">using</font> System.Runtime.Serialization;
+
+<font color="blue">namespace</font> CsGL.OpenGL
+<font color="black">{</font>
+    <font color="green">/// &#60;summary&#62;</font>
+    <font color="green">/// This ContextLocal variable manage DisplayList, you init it</font>
+    <font color="green">/// with the number of list needed and it automayically allocate for</font>
+    <font color="green">/// you a display list in each context. It do it in a lazy way, i.e.</font>
+    <font color="green">/// when asked.</font>
+    <font color="green">/// &#60;/summary&#62;</font>
+    <font color="black">[</font>Serializable<font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">class</font> DisplayList <font color="black">:</font> ContextLocal
+    <font color="black">{</font>
+        <font color="blue">private</font> <font color="blue">int</font> size;
+        
+        <font color="blue">public</font> DisplayList<font color="black">(</font><font color="blue">int</font> numList<font color="black">)</font> 
+        <font color="black">{</font>
+            size <font color="black">=</font> numList;
+            <font color="blue">if</font><font color="black">(</font>size <font color="black">&#60;</font> <font color="maroon">1</font><font color="black">)</font>
+                <font color="blue">throw</font> <font color="blue">new</font> ArgumentException<font color="black">(</font><font color="marooon">"num should be strictly positive"</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Get the list base</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">uint</font> Base
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> <font color="black">(</font><font color="blue">uint</font><font color="black">)</font> Value; <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// execute the display list</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">void</font> Call<font color="black">(</font><font color="black">)</font> <font color="black">{</font> Call<font color="black">(</font><font color="maroon">0</font><font color="black">)</font>; <font color="black">}</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// execute the display list with ID = Base + index</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> Call<font color="black">(</font><font color="blue">uint</font> index<font color="black">)</font> 
+        <font color="black">{</font>
+            glCallList<font color="black">(</font>Base <font color="black">+</font> index<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Get the number of display list allocated, or 0 if</font>
+        <font color="green">/// Disposed.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">int</font> Size
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> size; <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;do not set&#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">override</font> <font color="blue">object</font> Value <font color="black">{</font> <font color="blue">set</font> <font color="black">{</font><font color="black">}</font> <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// free the list</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">override</font> <font color="blue">void</font> Dispose<font color="black">(</font>OpenGLContext ctxt<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font>size <font color="black">&#60;</font> <font color="maroon">1</font><font color="black">)</font>
+                <font color="blue">return</font>;
+            ctxt.Grab<font color="black">(</font><font color="black">)</font>;
+            glDeleteLists<font color="black">(</font>Base, size<font color="black">)</font>;
+            size <font color="black">=</font> <font color="maroon">0</font>;
+        <font color="black">}</font>
+        
+        <font color="blue">protected</font> <font color="blue">override</font> <font color="blue">object</font> New<font color="black">(</font><font color="black">)</font> 
+        <font color="black">{</font>
+            <font color="blue">uint</font> ret <font color="black">=</font> glGenLists<font color="black">(</font>size<font color="black">)</font>;
+            OpenGLException.Assert<font color="black">(</font><font color="black">)</font>;
+            <font color="blue">return</font> ret;
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">override</font> <font color="blue">void</font> GetObjectData<font color="black">(</font>SerializationInfo info, 
+                                          StreamingContext context<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">base</font>.GetObjectData<font color="black">(</font>info, context<font color="black">)</font>;
+            info.AddValue<font color="black">(</font><font color="marooon">"size"</font>, size<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="blue">protected</font> DisplayList<font color="black">(</font>SerializationInfo info, 
+                              StreamingContext context<font color="black">)</font>
+                              <font color="black">:</font> <font color="blue">base</font><font color="black">(</font>info, context<font color="black">)</font>
+        <font color="black">{</font>
+            size <font color="black">=</font> info.GetInt32<font color="black">(</font><font color="marooon">"size"</font><font color="black">)</font>;
+        <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

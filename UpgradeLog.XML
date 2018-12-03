@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="Skeleton Extraction">
+</Property><Property Name="Solution File" Value="C:\Documents and Settings\Administrator\桌面\IsolineEditing\Skeleton Extraction.sln">
+</Property><Property Name="User Options File" Value="C:\Documents and Settings\Administrator\桌面\IsolineEditing\Skeleton Extraction.suo">
+</Property><Property Name="Date" Value="2008年11月10日">
+</Property><Property Name="Time" Value="下午 22:17">
+</Property></Properties><Event ErrorLevel="0" Project="" Source="Skeleton Extraction.sln" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\Skeleton Extraction.sln">
+</Event><Event ErrorLevel="0" Project="" Source="Skeleton Extraction.suo" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\Skeleton Extraction.suo">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="Skeleton Extraction Demo.csproj" Description="Project file successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\Skeleton Extraction Demo.csproj">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="Skeleton Extraction Demo.csproj.user" Description="Project user file successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\Skeleton Extraction Demo.csproj.user">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="AboutBox1.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\AboutBox1.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="AboutBox1.Designer.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\AboutBox1.Designer.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="DualLaplacianDeformer.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\DualLaplacianDeformer.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="FormInput.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\FormInput.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="FormInput.designer.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\FormInput.designer.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="GeneralReducedDeformer.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\GeneralReducedDeformer.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="HiPerfTimer.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\HiPerfTimer.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MeshSegmentation.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MeshSegmentation.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MultigridContractionSolver.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MultigridContractionSolver.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MyGeometry\Deformer.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MyGeometry\Deformer.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="FormMain.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\FormMain.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="FormMain.Designer.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\FormMain.Designer.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="IsolineDeformer.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\IsolineDeformer.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MeshView.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MeshView.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MeshView.Designer.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MeshView.Designer.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MultigridHarmonicFieldSolver.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MultigridHarmonicFieldSolver.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MyDataType\PriorityQueue.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MyDataType\PriorityQueue.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MyDataType\Set.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MyDataType\Set.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MyGeometry\Matrix.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MyGeometry\Matrix.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MyGeometry\Quaternion.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MyGeometry\Quaternion.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MyGeometry\RowBasedMatrix.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MyGeometry\RowBasedMatrix.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MyGeometry\SparseMatrix.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MyGeometry\SparseMatrix.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MyGeometry\Trackball.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MyGeometry\Trackball.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MyGeometry\Vector.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MyGeometry\Vector.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="MyGeometry\Mesh.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\MyGeometry\Mesh.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="NumericalRecipes\SVD.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\NumericalRecipes\SVD.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="OpenGLProjector.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\OpenGLProjector.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="Program.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\Program.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="Properties\AssemblyInfo.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\Properties\AssemblyInfo.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="Properties\Resources.Designer.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\Properties\Resources.Designer.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="Properties\Settings.Designer.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\Properties\Settings.Designer.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="PropertyClasses.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\PropertyClasses.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="Skeletonizer.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\Skeletonizer.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="Skeletonizer2.cs" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\Skeletonizer2.cs">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="Properties\Settings.settings" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\Properties\Settings.settings">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="AboutBox1.resx" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\AboutBox1.resx">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="FormInput.resx" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\FormInput.resx">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="FormMain.resx" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\FormMain.resx">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="Properties\Resources.resx" Description="File successfully backed up as C:\Documents and Settings\Administrator\桌面\IsolineEditing\Backup\Properties\Resources.resx">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="Skeleton Extraction Demo.csproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="Skeleton Extraction Demo" Source="Skeleton Extraction Demo.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="" Source="Skeleton Extraction.sln" Description="Solution converted successfully">
+</Event><Event ErrorLevel="3" Project="" Source="Skeleton Extraction.sln" Description="Converted">
+</Event><Event ErrorLevel="0" Project="Skeleton Extraction Demo" Source="Skeleton Extraction Demo.csproj" Description="Scan complete: Upgrade not required for project files.">
+</Event></UpgradeLog>

@@ -1,0 +1,249 @@
+<HTML>
+<HEAD>
+<TITLE>
+OpenGLTexture2D.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Drawing;
+<font color="blue">using</font> System.Drawing.Imaging;
+<font color="blue">using</font> System.IO;
+<font color="blue">using</font> System.Runtime.Serialization;
+
+<font color="blue">namespace</font> CsGL.OpenGL
+<font color="black">{</font>
+    <font color="green">/// &#60;summary&#62;</font>
+    <font color="green">/// This is an helper class to load a 2D texture from an image.</font>
+    <font color="green">/// It is a quite simple topics, but quite repetitive so here</font>
+    <font color="green">/// is an example implementation.</font>
+    <font color="green">/// &#60;/summary&#62;</font>
+    <font color="black">[</font>Serializable<font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">class</font> OpenGLTexture2D <font color="black">:</font> ContextLocal
+    <font color="black">{</font>
+        <font color="blue">public</font> <font color="blue">enum</font> Tex2DType <font color="black">:</font> <font color="blue">byte</font>
+        <font color="black">{</font>
+            SIMPLE,
+            MIPMAPED,
+            BORDERED
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">override</font> <font color="blue">void</font> GetObjectData<font color="black">(</font>SerializationInfo info, 
+                                          StreamingContext context<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">base</font>.GetObjectData<font color="black">(</font>info, context<font color="black">)</font>;
+            info.AddValue<font color="black">(</font><font color="marooon">"type"</font>, <font color="black">(</font><font color="blue">byte</font><font color="black">)</font> type<font color="black">)</font>;
+            info.AddValue<font color="black">(</font><font color="marooon">"image"</font>,    image<font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="blue">protected</font> OpenGLTexture2D<font color="black">(</font>SerializationInfo info, 
+                              StreamingContext context<font color="black">)</font>
+                              <font color="black">:</font> <font color="blue">base</font><font color="black">(</font>info, context<font color="black">)</font>
+        <font color="black">{</font>
+            type <font color="black">=</font> <font color="black">(</font>Tex2DType<font color="black">)</font> info.GetByte<font color="black">(</font><font color="marooon">"type"</font><font color="black">)</font>;
+            image    <font color="black">=</font> <font color="black">(</font>Bitmap<font color="black">)</font> info.GetValue<font color="black">(</font><font color="marooon">"image"</font>, <font color="blue">typeof</font><font color="black">(</font>Bitmap<font color="black">)</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Init(new Bitmap(file), false, false)</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> OpenGLTexture2D<font color="black">(</font>string file<font color="black">)</font> <font color="black">:</font> <font color="blue">this</font><font color="black">(</font>file, Tex2DType.SIMPLE<font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Init(new Bitmap(file), border, false)</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> OpenGLTexture2D<font color="black">(</font>string file, Tex2DType type<font color="black">)</font>
+        <font color="black">{</font>
+            Init<font color="black">(</font><font color="blue">new</font> Bitmap<font color="black">(</font>file<font color="black">)</font>, type, <font color="blue">false</font><font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Init(new Bitmap(file), false, false)</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> OpenGLTexture2D<font color="black">(</font>Stream file<font color="black">)</font> <font color="black">:</font> <font color="blue">this</font><font color="black">(</font>file, Tex2DType.SIMPLE<font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Init(new Bitmap(file), border, false)</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> OpenGLTexture2D<font color="black">(</font>Stream file, Tex2DType type<font color="black">)</font>
+        <font color="black">{</font>
+            Init<font color="black">(</font><font color="blue">new</font> Bitmap<font color="black">(</font>file<font color="black">)</font>, type, <font color="blue">false</font><font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Init(img, false, true)</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> OpenGLTexture2D<font color="black">(</font>Bitmap img<font color="black">)</font> <font color="black">:</font> <font color="blue">this</font><font color="black">(</font>img, Tex2DType.SIMPLE, <font color="blue">true</font><font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Init(img, border, true)</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> OpenGLTexture2D<font color="black">(</font>Bitmap img, Tex2DType type<font color="black">)</font> <font color="black">:</font> <font color="blue">this</font><font color="black">(</font>img, type, <font color="blue">true</font><font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Init(img, border, copy)</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> OpenGLTexture2D<font color="black">(</font>Bitmap img, Tex2DType type, <font color="blue">bool</font> copy<font color="black">)</font>
+        <font color="black">{</font>
+            Init<font color="black">(</font>img, type, copy<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="blue">protected</font> Tex2DType type;
+        <font color="blue">protected</font> Bitmap image;
+        
+        <font color="green">/// &#60;param name="aType"&#62; </font>
+        <font color="green">/// tell the type of the texture, wether it fill its border, or</font>
+        <font color="green">/// not and wether it is mipmaped or not</font>
+        <font color="green">/// &#60;/param&#62;</font>
+        <font color="green">/// &#60;param name="copy"&#62; </font>
+        <font color="green">/// tell wether or not this texture should consider the image</font>
+        <font color="green">/// as a private copy it could modify, or not</font>
+        <font color="green">/// &#60;/param&#62;</font>
+        <font color="green">/// &#60;param name="img"&#62; </font>
+        <font color="green">/// the image to be used as a texture</font>
+        <font color="green">/// &#60;/param&#62;</font>
+        <font color="blue">protected</font> <font color="blue">void</font> Init<font color="black">(</font>Bitmap img, Tex2DType aType, <font color="blue">bool</font> copy<font color="black">)</font>
+        <font color="black">{</font>
+            type  <font color="black">=</font> aType;
+            image <font color="black">=</font> copy ? <font color="black">(</font>Bitmap<font color="black">)</font> img.Clone<font color="black">(</font><font color="black">)</font> <font color="black">:</font> img;
+            image.RotateFlip<font color="black">(</font>RotateFlipType.RotateNoneFlipY<font color="black">)</font>;
+                            
+            <font color="green">// check OpenGL compliant size</font>
+            <font color="blue">int</font> sx <font color="black">=</font> image.Width <font color="black">-</font><font color="black">(</font>IsBorder ? <font color="maroon">2</font> <font color="black">:</font> <font color="maroon">0</font><font color="black">)</font>;
+            <font color="blue">int</font> sy <font color="black">=</font> image.Height <font color="black">-</font><font color="black">(</font>IsBorder ? <font color="maroon">2</font> <font color="black">:</font> <font color="maroon">0</font><font color="black">)</font>;
+            <font color="blue">int</font> sx2 <font color="black">=</font> power_of_two<font color="black">(</font>sx<font color="black">)</font>;
+            <font color="blue">int</font> sy2 <font color="black">=</font> power_of_two<font color="black">(</font>sy<font color="black">)</font>;
+            
+            <font color="green">// stretch it...</font>
+            <font color="blue">if</font><font color="black">(</font>sx <font color="black">!</font><font color="black">=</font> sx2 <font color="black">|</font><font color="black">|</font> sy <font color="black">!</font><font color="black">=</font> sy2<font color="black">)</font> <font color="black">{</font>
+                <font color="blue">if</font><font color="black">(</font>IsBorder<font color="black">)</font> <font color="black">{</font>
+                    sx2 <font color="black">+</font><font color="black">=</font> <font color="maroon">2</font>;
+                    sy2 <font color="black">+</font><font color="black">=</font> <font color="maroon">2</font>;
+                <font color="black">}</font>
+                Bitmap img2 <font color="black">=</font> <font color="blue">new</font> Bitmap<font color="black">(</font>image, sx2, sy2<font color="black">)</font>;
+                image.Dispose<font color="black">(</font><font color="black">)</font>;
+                image <font color="black">=</font> img2;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">bool</font> IsBorder   <font color="black">{</font> <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> type <font color="black">=</font><font color="black">=</font> Tex2DType.BORDERED; <font color="black">}</font> <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">bool</font> IsMipmaped <font color="black">{</font> <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> type <font color="black">=</font><font color="black">=</font> Tex2DType.MIPMAPED; <font color="black">}</font> <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// utility fct to return the next power of 2 equal or superior</font>
+        <font color="green">/// to a given number. as OpenGL texture should have such a size</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">int</font> power_of_two<font color="black">(</font><font color="blue">int</font> <font color="blue">input</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">int</font> val <font color="black">=</font> <font color="maroon">1</font>;
+            
+            <font color="blue">while</font><font color="black">(</font>val <font color="black">&#60;</font> <font color="blue">input</font><font color="black">)</font>
+                val <font color="black">&#60;</font><font color="black">&#60;</font><font color="black">=</font> <font color="maroon">1</font>;
+            <font color="blue">return</font> val;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// create context local texture, and return its id</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">protected</font> <font color="blue">override</font> <font color="blue">object</font> New<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">uint</font><font color="black">[</font><font color="black">]</font> texture <font color="black">=</font> <font color="blue">new</font> <font color="blue">uint</font><font color="black">[</font><font color="maroon">1</font><font color="black">]</font>;
+            
+            BitmapData tex;
+            Rectangle rect;
+            rect <font color="black">=</font> <font color="blue">new</font> Rectangle<font color="black">(</font><font color="maroon">0</font>, <font color="maroon">0</font>, image.Width, image.Height<font color="black">)</font>;
+            tex <font color="black">=</font> image.LockBits<font color="black">(</font>rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb<font color="black">)</font>;
+
+            glGenTextures<font color="black">(</font>texture.Length, texture<font color="black">)</font>;
+            
+            glBindTexture<font color="black">(</font>GL_TEXTURE_2D, texture<font color="black">[</font><font color="maroon">0</font><font color="black">]</font><font color="black">)</font>;
+            SetParameter<font color="black">(</font><font color="black">)</font>;
+            <font color="blue">if</font><font color="black">(</font>IsMipmaped<font color="black">)</font>
+                gluBuild2DMipmaps<font color="black">(</font>GL_TEXTURE_2D, <font color="black">(</font><font color="blue">int</font><font color="black">)</font>GL.GL_RGB8, 
+                                  image.Width, image.Height, 
+                                  GL.GL_BGRA_EXT, GL.GL_UNSIGNED_BYTE, 
+                                  tex.Scan0<font color="black">)</font>;
+            <font color="blue">else</font>
+                glTexImage2D<font color="black">(</font>GL_TEXTURE_2D, <font color="maroon">0</font>, <font color="black">(</font><font color="blue">int</font><font color="black">)</font>GL_RGB8, 
+                            image.Width, image.Height, 
+                            IsBorder ? <font color="maroon">1</font> <font color="black">:</font> <font color="maroon">0</font>, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 
+                            tex.Scan0<font color="black">)</font>;
+            
+            image.UnlockBits<font color="black">(</font>tex<font color="black">)</font>;
+            
+            OpenGLException.Assert<font color="black">(</font><font color="black">)</font>;
+            <font color="blue">return</font> texture;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// called while initializing this texture, just before call to</font>
+        <font color="green">/// glTexImage2D/gluTexImage2D to set filter option...</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">protected</font> <font color="blue">virtual</font> <font color="blue">void</font> SetParameter<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            glTexParameteri<font color="black">(</font>GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR<font color="black">)</font>;
+            glTexParameteri<font color="black">(</font>GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// return the texture ID</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">uint</font> ID <font color="black">{</font> <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> <font color="black">(</font><font color="black">(</font><font color="blue">uint</font><font color="black">[</font><font color="black">]</font><font color="black">)</font> Value<font color="black">)</font><font color="black">[</font><font color="maroon">0</font><font color="black">]</font>; <font color="black">}</font> <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// make this texture the current OpenGL 2D texture.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">void</font> Bind<font color="black">(</font><font color="black">)</font> 
+        <font color="black">{</font>
+            glBindTexture<font color="black">(</font>GL_TEXTURE_2D, ID<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">override</font> <font color="blue">void</font> Dispose<font color="black">(</font>OpenGLContext ctxt<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">uint</font><font color="black">[</font><font color="black">]</font> tex <font color="black">=</font> <font color="black">(</font><font color="blue">uint</font><font color="black">[</font><font color="black">]</font><font color="black">)</font> Get<font color="black">(</font>ctxt<font color="black">)</font>;
+            <font color="blue">if</font><font color="black">(</font>tex <font color="black">=</font><font color="black">=</font> <font color="blue">null</font><font color="black">)</font> <font color="green">// already disposed</font>
+                <font color="blue">return</font>;
+            
+            ctxt.Grab<font color="black">(</font><font color="black">)</font>;
+            glDeleteTextures<font color="black">(</font>tex.Length, tex<font color="black">)</font>;
+            Set<font color="black">(</font>ctxt, <font color="blue">null</font><font color="black">)</font>;
+        <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

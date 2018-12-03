@@ -1,0 +1,181 @@
+<HTML>
+<HEAD>
+<TITLE>
+OpenGLFont.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Diagnostics;
+<font color="blue">using</font> System.Runtime.Serialization;
+<font color="blue">using</font> System.Text;
+<font color="blue">using</font> System.Runtime.InteropServices;
+<font color="blue">using</font> System.Windows.Forms;
+<font color="blue">using</font> System.Drawing;
+<font color="blue">using</font> System.Drawing.Imaging;
+
+<font color="blue">namespace</font> CsGL.OpenGL
+<font color="black">{</font>
+    <font color="green">/// &#60;summary&#62;</font>
+    <font color="green">/// So how work font object ? it pregenerate your 3D representation of </font>
+    <font color="green">/// your character in a display list, rendering them with glCallLists()</font>
+    <font color="green">/// function. Unfortunately C# char are unicode with 65536 possible value.</font>
+    <font color="green">/// too much object for memory so you should define a range of predefined </font>
+    <font color="green">/// object when allocating such object. when writting a string, it would</font>
+    <font color="green">/// be your responsability to be sure than any char is in the proper range.</font>
+    <font color="green">/// There is still work to do when mixing latin char to japanese one...</font>
+    <font color="green">/// &#60;P&#62;There is an interesting object &#60;B&#62;GDITextureFont&#60;/B&#62; which</font>
+    <font color="green">/// is not abstract and create OpenGL font from System.Drawing.Font for</font>
+    <font color="green">/// you&#60;/P&#62;</font>
+    <font color="green">/// &#60;seealso cref="OpenGLFont.InitRange"/&#62;</font>
+    <font color="green">/// &#60;seealso cref="GDITextureFont"/&#62;</font>
+    <font color="green">/// &#60;/summary&#62;</font>
+    <font color="black">[</font>Serializable<font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">abstract</font> <font color="blue">class</font> OpenGLFont <font color="black">:</font> DisplayList
+    <font color="black">{</font>
+        <font color="blue">char</font> first, last;
+        
+        <font color="blue">public</font> OpenGLFont<font color="black">(</font><font color="blue">char</font> aFirst, <font color="blue">char</font> aLast<font color="black">)</font> <font color="black">:</font> <font color="blue">base</font><font color="black">(</font><font color="maroon">0x10000</font><font color="black">)</font>
+        <font color="black">{</font>
+            first <font color="black">=</font> aFirst;
+            last  <font color="black">=</font> aLast;
+        <font color="black">}</font>
+        <font color="blue">public</font> OpenGLFont<font color="black">(</font><font color="black">)</font> <font color="black">:</font> <font color="blue">this</font><font color="black">(</font><font color="black">(</font><font color="blue">char</font><font color="black">)</font><font color="maroon">0x20</font>, <font color="black">(</font><font color="blue">char</font><font color="black">)</font> <font color="maroon">0xFF</font><font color="black">)</font>
+        <font color="black">{</font>
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// set the OpenGL coordinate system to 2D (no depth test, Z between -1, 1)</font>
+        <font color="green">/// and X-Y coordinate bound to (0,0) - (width, height) </font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> Push3DTo2D<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            glMatrixMode<font color="black">(</font> GL_PROJECTION <font color="black">)</font>;
+            glPushMatrix<font color="black">(</font><font color="black">)</font>;
+            
+            <font color="blue">int</font><font color="black">[</font><font color="black">]</font> viewport <font color="black">=</font> <font color="blue">new</font> <font color="blue">int</font><font color="black">[</font><font color="maroon">4</font><font color="black">]</font>;
+            glGetIntegerv<font color="black">(</font>GL_VIEWPORT, viewport<font color="black">)</font>;
+            glLoadIdentity<font color="black">(</font><font color="black">)</font>;
+            glOrtho<font color="black">(</font><font color="maroon">0</font>, viewport<font color="black">[</font><font color="maroon">2</font><font color="black">]</font>, <font color="maroon">0</font>, viewport<font color="black">[</font><font color="maroon">3</font><font color="black">]</font>, <font color="maroon">-1</font>, <font color="maroon">1</font><font color="black">)</font>;
+            
+            glMatrixMode<font color="black">(</font>GL_MODELVIEW<font color="black">)</font>;
+            glPushMatrix<font color="black">(</font><font color="black">)</font>;
+            
+            glLoadIdentity<font color="black">(</font><font color="black">)</font>;
+            
+            glPushAttrib<font color="black">(</font>GL_DEPTH_BUFFER_BIT<font color="black">)</font>;
+            glDisable<font color="black">(</font>GL_DEPTH_TEST<font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// restore original coordinate system after a call to &#60;code&#62;Push3DTo2D()&#60;/code&#62;</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> Pop2DTo3D<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            glPopAttrib<font color="black">(</font><font color="black">)</font>;
+            glMatrixMode<font color="black">(</font> GL_MODELVIEW <font color="black">)</font>;
+            glPopMatrix<font color="black">(</font><font color="black">)</font>;
+            glMatrixMode<font color="black">(</font> GL_PROJECTION <font color="black">)</font>;
+            glPopMatrix<font color="black">(</font><font color="black">)</font>;
+            glMatrixMode<font color="black">(</font> GL_MODELVIEW <font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// draw a string at the given position in pixel (control) coordinate</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> Draw2DString<font color="black">(</font>string s, <font color="blue">int</font> x, <font color="blue">int</font> y<font color="black">)</font>
+        <font color="black">{</font>
+            Push3DTo2D<font color="black">(</font><font color="black">)</font>;
+            try 
+            <font color="black">{</font>
+                glTranslated<font color="black">(</font>x,y,<font color="maroon">0</font><font color="black">)</font>;
+                DrawString<font color="black">(</font>s<font color="black">)</font>;
+            <font color="black">}</font>
+            <font color="blue">finally</font> <font color="black">{</font> Pop2DTo3D<font color="black">(</font><font color="black">)</font>; <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// draw a string at the current origin</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">virtual</font> <font color="blue">void</font> DrawString<font color="black">(</font>string s<font color="black">)</font>
+        <font color="black">{</font>
+            glPushMatrix<font color="black">(</font><font color="black">)</font>;     <font color="green">// store current origin</font>
+            glListBase<font color="black">(</font>Base<font color="black">)</font>;   <font color="green">// Choose The Font Set (0 or 1)</font>
+            glCallLists<font color="black">(</font>s.Length,GL_UNSIGNED_SHORT,s<font color="black">)</font>;      <font color="green">// Write The Text To The Screen</font>
+            glPopMatrix<font color="black">(</font><font color="black">)</font>; <font color="green">// restore previous camera</font>
+        <font color="black">}</font>
+        
+        <font color="blue">protected</font> <font color="blue">override</font> <font color="blue">object</font> New<font color="black">(</font><font color="black">)</font> 
+        <font color="black">{</font>
+            <font color="blue">uint</font> list <font color="black">=</font> <font color="black">(</font><font color="blue">uint</font><font color="black">)</font> <font color="blue">base</font>.New<font color="black">(</font><font color="black">)</font>;
+            try <font color="black">{</font> InitRange<font color="black">(</font>list, first, last<font color="black">)</font>; <font color="black">}</font>
+            <font color="blue">catch</font> 
+            <font color="black">{</font>
+                glDeleteLists<font color="black">(</font>list, <font color="maroon">0x10000</font><font color="black">)</font>;
+                <font color="blue">throw</font>;
+            <font color="black">}</font>
+            <font color="blue">return</font> list;
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">override</font> <font color="blue">void</font> GetObjectData<font color="black">(</font>SerializationInfo info, 
+                                          StreamingContext context<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">base</font>.GetObjectData<font color="black">(</font>info, context<font color="black">)</font>;
+            info.AddValue<font color="black">(</font><font color="marooon">"first"</font>, first<font color="black">)</font>;
+            info.AddValue<font color="black">(</font><font color="marooon">"last"</font>, last<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="blue">protected</font> OpenGLFont<font color="black">(</font>SerializationInfo info, 
+                              StreamingContext context<font color="black">)</font>
+                              <font color="black">:</font> <font color="blue">base</font><font color="black">(</font>info, context<font color="black">)</font>
+        <font color="black">{</font>
+            first <font color="black">=</font> <font color="black">(</font><font color="blue">char</font><font color="black">)</font> info.GetInt16<font color="black">(</font><font color="marooon">"first"</font><font color="black">)</font>;
+            last  <font color="black">=</font> <font color="black">(</font><font color="blue">char</font><font color="black">)</font> info.GetInt16<font color="black">(</font><font color="marooon">"last"</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Here you init a range of character. Obviously you should</font>
+        <font color="green">/// call this method to initialize range of character before </font>
+        <font color="green">/// using DrawString</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="green">/// &#60;param name="font_base"&#62; </font>
+        <font color="green">/// the base of the OpenGLFont's display list.</font>
+        <font color="green">/// &#60;/param&#62;</font>
+        <font color="blue">protected</font> <font color="blue">abstract</font> <font color="blue">void</font> InitRange<font color="black">(</font><font color="blue">uint</font> font_base, <font color="blue">char</font> first, <font color="blue">char</font> last<font color="black">)</font>;
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

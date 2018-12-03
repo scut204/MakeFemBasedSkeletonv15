@@ -1,0 +1,871 @@
+<HTML>
+<HEAD>
+<TITLE>
+GLUT.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="blue">#region</font> BSD License
+<font color="green">/*
+ BSD License
+Copyright (c) 2002, Randy Ridge, The CsGL Development Team
+http://csgl.sourceforge.net/
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of The CsGL Development Team nor the names of its
+   contributors may be used to endorse or promote products derived from this
+   software without specific prior written permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+   FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+   COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+   INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+   BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+   LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+   CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+   LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+   POSSIBILITY OF SUCH DAMAGE.
+ */</font>
+<font color="blue">#endregion</font> BSD License
+
+<font color="blue">#region</font> Original Credits <font color="black">/</font> License
+<font color="green">/* Copyright (c) Mark J. Kilgard, 1994, 1997. */</font>
+
+<font color="green">/**
+(c) Copyright 1993, Silicon Graphics, Inc.
+
+ALL RIGHTS RESERVED
+
+Permission to use, copy, modify, and distribute this software
+for any purpose and without fee is hereby granted, provided
+that the above copyright notice appear in all copies and that
+both the copyright notice and this permission notice appear in
+supporting documentation, and that the name of Silicon
+Graphics, Inc. not be used in advertising or publicity
+pertaining to distribution of the software without specific,
+written prior permission.
+
+THE MATERIAL EMBODIED ON THIS SOFTWARE IS PROVIDED TO YOU
+"AS-IS" AND WITHOUT WARRANTY OF ANY KIND, EXPRESS, IMPLIED OR
+OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF
+MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  IN NO
+EVENT SHALL SILICON GRAPHICS, INC.  BE LIABLE TO YOU OR ANYONE
+ELSE FOR ANY DIRECT, SPECIAL, INCIDENTAL, INDIRECT OR
+CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES WHATSOEVER,
+INCLUDING WITHOUT LIMITATION, LOSS OF PROFIT, LOSS OF USE,
+SAVINGS OR REVENUE, OR THE CLAIMS OF THIRD PARTIES, WHETHER OR
+NOT SILICON GRAPHICS, INC.  HAS BEEN ADVISED OF THE POSSIBILITY
+OF SUCH LOSS, HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ARISING OUT OF OR IN CONNECTION WITH THE POSSESSION, USE OR
+PERFORMANCE OF THIS SOFTWARE.
+
+US Government Users Restricted Rights
+
+Use, duplication, or disclosure by the Government is subject to
+restrictions set forth in FAR 52.227.19(c)(2) or subparagraph
+(c)(1)(ii) of the Rights in Technical Data and Computer
+Software clause at DFARS 252.227-7013 and/or in similar or
+successor clauses in the FAR or the DOD or NASA FAR
+Supplement.  Unpublished-- rights reserved under the copyright
+laws of the United States.  Contractor/manufacturer is Silicon
+Graphics, Inc., 2011 N.  Shoreline Blvd., Mountain View, CA
+94039-7311.
+
+OpenGL(TM) is a trademark of Silicon Graphics, Inc.
+*/</font>
+<font color="blue">#endregion</font> Original Credits <font color="black">/</font> License
+
+<font color="blue">using</font> System;
+
+<font color="blue">namespace</font> CsGL.OpenGL <font color="black">{</font>
+    <font color="green">/// &#60;summary&#62;</font>
+    <font color="green">/// Implements GLUT shapes.</font>
+    <font color="green">/// &#60;/summary&#62;</font>
+    <font color="black">[</font>Serializable<font color="black">]</font>
+    <font color="blue">public</font> <font color="blue">abstract</font> <font color="blue">class</font> GLUT <font color="black">:</font> GLU <font color="black">{</font>
+        <font color="green">// --- Fields ---</font>
+        <font color="blue">#region</font> Private Fields
+        <font color="blue">private</font> <font color="blue">static</font> GLUquadric quadObj;
+
+        <font color="green">// Box Data:</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">float</font><font color="black">[</font><font color="green">/*6*/</font>, <font color="green">/*3*/</font><font color="black">]</font> n <font color="black">=</font> <font color="black">{</font>
+            <font color="black">{</font><font color="maroon">-1</font>.0f,  <font color="maroon">0</font>.0f,  <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font> <font color="maroon">0</font>.0f,  <font color="maroon">1</font>.0f,  <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font> <font color="maroon">1</font>.0f,  <font color="maroon">0</font>.0f,  <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font> <font color="maroon">0</font>.0f, <font color="maroon">-1</font>.0f,  <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font> <font color="maroon">0</font>.0f,  <font color="maroon">0</font>.0f,  <font color="maroon">1</font>.0f<font color="black">}</font>,
+            <font color="black">{</font> <font color="maroon">0</font>.0f,  <font color="maroon">0</font>.0f, <font color="maroon">-1</font>.0f<font color="black">}</font>
+        <font color="black">}</font>;
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">int</font><font color="black">[</font><font color="green">/*6*/</font>, <font color="green">/*4*/</font><font color="black">]</font> faces <font color="black">=</font> <font color="black">{</font>
+            <font color="black">{</font><font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">2</font>, <font color="maroon">3</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">3</font>, <font color="maroon">2</font>, <font color="maroon">6</font>, <font color="maroon">7</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">7</font>, <font color="maroon">6</font>, <font color="maroon">5</font>, <font color="maroon">4</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">4</font>, <font color="maroon">5</font>, <font color="maroon">1</font>, <font color="maroon">0</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">5</font>, <font color="maroon">6</font>, <font color="maroon">2</font>, <font color="maroon">1</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">7</font>, <font color="maroon">4</font>, <font color="maroon">0</font>, <font color="maroon">3</font><font color="black">}</font>
+        <font color="black">}</font>;
+
+        <font color="blue">private</font> <font color="blue">const</font> <font color="blue">float</font> M_PI <font color="black">=</font> <font color="maroon">3</font>.14159265358979323846f;
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">float</font><font color="black">[</font> , <font color="black">]</font> dodec <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">20</font>, <font color="maroon">3</font><font color="black">]</font>;
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">bool</font> dodecinited <font color="black">=</font> <font color="blue">false</font>;
+
+        <font color="green">// Octahedron Data: The Octahedron Produced Is Centered At The Origin And Has A Radius Of 1.0f</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">float</font><font color="black">[</font> , <font color="black">]</font> odata <font color="black">=</font> <font color="black">{</font>
+            <font color="black">{</font><font color="maroon">1</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-1</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">1</font>.0f, <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-1</font>.0f, <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">1</font>.0f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">-1</font>.0f<font color="black">}</font>
+        <font color="black">}</font>;
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">int</font><font color="black">[</font> , <font color="black">]</font> ondex <font color="black">=</font> <font color="black">{</font>
+            <font color="black">{</font><font color="maroon">0</font>, <font color="maroon">4</font>, <font color="maroon">2</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>, <font color="maroon">2</font>, <font color="maroon">4</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>, <font color="maroon">3</font>, <font color="maroon">4</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>, <font color="maroon">4</font>, <font color="maroon">3</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>, <font color="maroon">2</font>, <font color="maroon">5</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>, <font color="maroon">5</font>, <font color="maroon">2</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>, <font color="maroon">5</font>, <font color="maroon">3</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>, <font color="maroon">3</font>, <font color="maroon">5</font><font color="black">}</font>
+        <font color="black">}</font>;
+
+        <font color="green">// Icosahedron Data: These Numbers Are Rigged To Make An Icosahedron Of Radius 1.0f</font>
+        <font color="blue">private</font> <font color="blue">const</font> <font color="blue">float</font> X <font color="black">=</font> <font color="maroon">0</font>.525731112119133606f;
+        <font color="blue">private</font> <font color="blue">const</font> <font color="blue">float</font> Z <font color="black">=</font> <font color="maroon">0</font>.850650808352039932f;
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">float</font><font color="black">[</font> , <font color="black">]</font> idata <font color="black">=</font> <font color="black">{</font>
+            <font color="black">{</font><font color="black">-</font>X, <font color="maroon">0</font>, Z<font color="black">}</font>,
+            <font color="black">{</font>X, <font color="maroon">0</font>, Z<font color="black">}</font>,
+            <font color="black">{</font><font color="black">-</font>X, <font color="maroon">0</font>, <font color="black">-</font>Z<font color="black">}</font>,
+            <font color="black">{</font>X, <font color="maroon">0</font>, <font color="black">-</font>Z<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>, Z, X<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>, Z, <font color="black">-</font>X<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>, <font color="black">-</font>Z, X<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>, <font color="black">-</font>Z, <font color="black">-</font>X<font color="black">}</font>,
+            <font color="black">{</font>Z, X, <font color="maroon">0</font><font color="black">}</font>,
+            <font color="black">{</font><font color="black">-</font>Z, X, <font color="maroon">0</font><font color="black">}</font>,
+            <font color="black">{</font>Z, <font color="black">-</font>X, <font color="maroon">0</font><font color="black">}</font>,
+            <font color="black">{</font><font color="black">-</font>Z, <font color="black">-</font>X, <font color="maroon">0</font><font color="black">}</font>
+        <font color="black">}</font>;
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">int</font><font color="black">[</font> , <font color="black">]</font> index <font color="black">=</font> <font color="black">{</font>
+            <font color="black">{</font><font color="maroon">0</font>, <font color="maroon">4</font>, <font color="maroon">1</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>, <font color="maroon">9</font>, <font color="maroon">4</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">9</font>, <font color="maroon">5</font>, <font color="maroon">4</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">4</font>, <font color="maroon">5</font>, <font color="maroon">8</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">4</font>, <font color="maroon">8</font>, <font color="maroon">1</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">8</font>, <font color="maroon">10</font>, <font color="maroon">1</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">8</font>, <font color="maroon">3</font>, <font color="maroon">10</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">5</font>, <font color="maroon">3</font>, <font color="maroon">8</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">5</font>, <font color="maroon">2</font>, <font color="maroon">3</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>, <font color="maroon">7</font>, <font color="maroon">3</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">7</font>, <font color="maroon">10</font>, <font color="maroon">3</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">7</font>, <font color="maroon">6</font>, <font color="maroon">10</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">7</font>, <font color="maroon">11</font>, <font color="maroon">6</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">11</font>, <font color="maroon">0</font>, <font color="maroon">6</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">6</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">6</font>, <font color="maroon">1</font>, <font color="maroon">10</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">9</font>, <font color="maroon">0</font>, <font color="maroon">11</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">9</font>, <font color="maroon">11</font>, <font color="maroon">2</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">9</font>, <font color="maroon">2</font>, <font color="maroon">5</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">7</font>, <font color="maroon">2</font>, <font color="maroon">11</font><font color="black">}</font>,
+        <font color="black">}</font>;
+
+        <font color="green">// Tetrahedron Data:</font>
+        <font color="blue">private</font> <font color="blue">const</font> <font color="blue">float</font> T <font color="black">=</font> <font color="maroon">1</font>.73205080756887729f;
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">float</font><font color="black">[</font> , <font color="black">]</font> tdata <font color="black">=</font> <font color="black">{</font>
+            <font color="black">{</font>T, T, T<font color="black">}</font>,
+            <font color="black">{</font>T, <font color="black">-</font>T, <font color="black">-</font>T<font color="black">}</font>,
+            <font color="black">{</font><font color="black">-</font>T, T, <font color="black">-</font>T<font color="black">}</font>,
+            <font color="black">{</font><font color="black">-</font>T, <font color="black">-</font>T, T<font color="black">}</font>
+        <font color="black">}</font>;
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">int</font><font color="black">[</font> , <font color="black">]</font> tndex <font color="black">=</font> <font color="black">{</font>
+            <font color="black">{</font><font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">3</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>, <font color="maroon">1</font>, <font color="maroon">0</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">3</font>, <font color="maroon">2</font>, <font color="maroon">0</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>, <font color="maroon">2</font>, <font color="maroon">3</font><font color="black">}</font>
+        <font color="black">}</font>;
+
+        <font color="green">// Teapot Data:</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">int</font><font color="black">[</font><font color="green">/*10*/</font> , <font color="green">/*16*/</font> <font color="black">]</font> patchdata <font color="black">=</font> <font color="black">{</font>
+            <font color="green">// Rim</font>
+            <font color="black">{</font><font color="maroon">102</font>, <font color="maroon">103</font>, <font color="maroon">104</font>, <font color="maroon">105</font>, <font color="maroon">4</font>, <font color="maroon">5</font>, <font color="maroon">6</font>, <font color="maroon">7</font>, <font color="maroon">8</font>, <font color="maroon">9</font>, <font color="maroon">10</font>, <font color="maroon">11</font>, <font color="maroon">12</font>, <font color="maroon">13</font>, <font color="maroon">14</font>, <font color="maroon">15</font><font color="black">}</font>,
+            <font color="green">// Body</font>
+            <font color="black">{</font><font color="maroon">12</font>, <font color="maroon">13</font>, <font color="maroon">14</font>, <font color="maroon">15</font>, <font color="maroon">16</font>, <font color="maroon">17</font>, <font color="maroon">18</font>, <font color="maroon">19</font>, <font color="maroon">20</font>, <font color="maroon">21</font>, <font color="maroon">22</font>, <font color="maroon">23</font>, <font color="maroon">24</font>, <font color="maroon">25</font>, <font color="maroon">26</font>, <font color="maroon">27</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">24</font>, <font color="maroon">25</font>, <font color="maroon">26</font>, <font color="maroon">27</font>, <font color="maroon">29</font>, <font color="maroon">30</font>, <font color="maroon">31</font>, <font color="maroon">32</font>, <font color="maroon">33</font>, <font color="maroon">34</font>, <font color="maroon">35</font>, <font color="maroon">36</font>, <font color="maroon">37</font>, <font color="maroon">38</font>, <font color="maroon">39</font>, <font color="maroon">40</font><font color="black">}</font>,
+            <font color="green">// Lid</font>
+            <font color="black">{</font><font color="maroon">96</font>, <font color="maroon">96</font>, <font color="maroon">96</font>, <font color="maroon">96</font>, <font color="maroon">97</font>, <font color="maroon">98</font>, <font color="maroon">99</font>, <font color="maroon">100</font>, <font color="maroon">101</font>, <font color="maroon">101</font>, <font color="maroon">101</font>, <font color="maroon">101</font>, <font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">2</font>, <font color="maroon">3</font>,<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">2</font>, <font color="maroon">3</font>, <font color="maroon">106</font>, <font color="maroon">107</font>, <font color="maroon">108</font>, <font color="maroon">109</font>, <font color="maroon">110</font>, <font color="maroon">111</font>, <font color="maroon">112</font>, <font color="maroon">113</font>, <font color="maroon">114</font>, <font color="maroon">115</font>, <font color="maroon">116</font>, <font color="maroon">117</font><font color="black">}</font>,
+            <font color="green">// Bottom</font>
+            <font color="black">{</font><font color="maroon">118</font>, <font color="maroon">118</font>, <font color="maroon">118</font>, <font color="maroon">118</font>, <font color="maroon">124</font>, <font color="maroon">122</font>, <font color="maroon">119</font>, <font color="maroon">121</font>, <font color="maroon">123</font>, <font color="maroon">126</font>, <font color="maroon">125</font>, <font color="maroon">120</font>, <font color="maroon">40</font>, <font color="maroon">39</font>, <font color="maroon">38</font>, <font color="maroon">37</font><font color="black">}</font>,
+            <font color="green">// Handle</font>
+            <font color="black">{</font><font color="maroon">41</font>, <font color="maroon">42</font>, <font color="maroon">43</font>, <font color="maroon">44</font>, <font color="maroon">45</font>, <font color="maroon">46</font>, <font color="maroon">47</font>, <font color="maroon">48</font>, <font color="maroon">49</font>, <font color="maroon">50</font>, <font color="maroon">51</font>, <font color="maroon">52</font>, <font color="maroon">53</font>, <font color="maroon">54</font>, <font color="maroon">55</font>, <font color="maroon">56</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">53</font>, <font color="maroon">54</font>, <font color="maroon">55</font>, <font color="maroon">56</font>, <font color="maroon">57</font>, <font color="maroon">58</font>, <font color="maroon">59</font>, <font color="maroon">60</font>, <font color="maroon">61</font>, <font color="maroon">62</font>, <font color="maroon">63</font>, <font color="maroon">64</font>, <font color="maroon">28</font>, <font color="maroon">65</font>, <font color="maroon">66</font>, <font color="maroon">67</font><font color="black">}</font>,
+            <font color="green">// Spout</font>
+            <font color="black">{</font><font color="maroon">68</font>, <font color="maroon">69</font>, <font color="maroon">70</font>, <font color="maroon">71</font>, <font color="maroon">72</font>, <font color="maroon">73</font>, <font color="maroon">74</font>, <font color="maroon">75</font>, <font color="maroon">76</font>, <font color="maroon">77</font>, <font color="maroon">78</font>, <font color="maroon">79</font>, <font color="maroon">80</font>, <font color="maroon">81</font>, <font color="maroon">82</font>, <font color="maroon">83</font><font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">80</font>, <font color="maroon">81</font>, <font color="maroon">82</font>, <font color="maroon">83</font>, <font color="maroon">84</font>, <font color="maroon">85</font>, <font color="maroon">86</font>, <font color="maroon">87</font>, <font color="maroon">88</font>, <font color="maroon">89</font>, <font color="maroon">90</font>, <font color="maroon">91</font>, <font color="maroon">92</font>, <font color="maroon">93</font>, <font color="maroon">94</font>, <font color="maroon">95</font><font color="black">}</font>
+        <font color="black">}</font>;
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">float</font><font color="black">[</font><font color="green">/*126*/</font>, <font color="green">/*3*/</font><font color="black">]</font> cpdata <font color="black">=</font> <font color="black">{</font>
+            <font color="black">{</font><font color="maroon">0</font>.2f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.7f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.2f, <font color="maroon">-0</font>.112f, <font color="maroon">2</font>.7f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.112f, <font color="maroon">-0</font>.2f, <font color="maroon">2</font>.7f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-0</font>.2f, <font color="maroon">2</font>.7f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.3375f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.53125f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.3375f, <font color="maroon">-0</font>.749f, <font color="maroon">2</font>.53125f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.749f, <font color="maroon">-1</font>.3375f, <font color="maroon">2</font>.53125f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-1</font>.3375f, <font color="maroon">2</font>.53125f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.4375f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.53125f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.4375f, <font color="maroon">-0</font>.805f, <font color="maroon">2</font>.53125f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.805f, <font color="maroon">-1</font>.4375f, <font color="maroon">2</font>.53125f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-1</font>.4375f, <font color="maroon">2</font>.53125f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.5f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.5f, <font color="maroon">-0</font>.84f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.84f, <font color="maroon">-1</font>.5f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-1</font>.5f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.75f, <font color="maroon">0</font>.0f, <font color="maroon">1</font>.875f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.75f, <font color="maroon">-0</font>.98f, <font color="maroon">1</font>.875f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.98f, <font color="maroon">-1</font>.75f, <font color="maroon">1</font>.875f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-1</font>.75f, <font color="maroon">1</font>.875f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">1</font>.35f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.0f, <font color="maroon">-1</font>.12f, <font color="maroon">1</font>.35f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.12f, <font color="maroon">-2</font>.0f, <font color="maroon">1</font>.35f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-2</font>.0f, <font color="maroon">1</font>.35f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.9f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.0f, <font color="maroon">-1</font>.12f, <font color="maroon">0</font>.9f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.12f, <font color="maroon">-2</font>.0f, <font color="maroon">0</font>.9f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-2</font>.0f, <font color="maroon">0</font>.9f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.9f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.45f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.0f, <font color="maroon">-1</font>.12f, <font color="maroon">0</font>.45f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.12f, <font color="maroon">-2</font>.0f, <font color="maroon">0</font>.45f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-2</font>.0f, <font color="maroon">0</font>.45f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.5f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.225f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.5f, <font color="maroon">-0</font>.84f, <font color="maroon">0</font>.225f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.84f, <font color="maroon">-1</font>.5f, <font color="maroon">0</font>.225f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-1</font>.5f, <font color="maroon">0</font>.225f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.5f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.15f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.5f, <font color="maroon">-0</font>.84f, <font color="maroon">0</font>.15f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.84f, <font color="maroon">-1</font>.5f, <font color="maroon">0</font>.15f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-1</font>.5f, <font color="maroon">0</font>.15f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-1</font>.6f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.025f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-1</font>.6f, <font color="maroon">-0</font>.3f, <font color="maroon">2</font>.025f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-1</font>.5f, <font color="maroon">-0</font>.3f, <font color="maroon">2</font>.25f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-1</font>.5f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.25f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.3f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.025f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.3f, <font color="maroon">-0</font>.3f, <font color="maroon">2</font>.025f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.5f, <font color="maroon">-0</font>.3f, <font color="maroon">2</font>.25f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.5f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.25f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.7f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.025f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.7f, <font color="maroon">-0</font>.3f, <font color="maroon">2</font>.025f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-3</font>.0f, <font color="maroon">-0</font>.3f, <font color="maroon">2</font>.25f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-3</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.25f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.7f, <font color="maroon">0</font>.0f, <font color="maroon">1</font>.8f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.7f, <font color="maroon">-0</font>.3f, <font color="maroon">1</font>.8f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-3</font>.0f, <font color="maroon">-0</font>.3f, <font color="maroon">1</font>.8f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-3</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">1</font>.8f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.7f, <font color="maroon">0</font>.0f, <font color="maroon">1</font>.575f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.7f, <font color="maroon">-0</font>.3f, <font color="maroon">1</font>.575f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-3</font>.0f, <font color="maroon">-0</font>.3f, <font color="maroon">1</font>.35f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-3</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">1</font>.35f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.5f, <font color="maroon">0</font>.0f, <font color="maroon">1</font>.125f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.5f, <font color="maroon">-0</font>.3f, <font color="maroon">1</font>.125f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.65f, <font color="maroon">-0</font>.3f, <font color="maroon">0</font>.9375f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.65f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.9375f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-2</font>.0f, <font color="maroon">-0</font>.3f, <font color="maroon">0</font>.9f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-1</font>.9f, <font color="maroon">-0</font>.3f, <font color="maroon">0</font>.6f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">-1</font>.9f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.6f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.7f, <font color="maroon">0</font>.0f, <font color="maroon">1</font>.425f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.7f, <font color="maroon">-0</font>.66f, <font color="maroon">1</font>.425f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.7f, <font color="maroon">-0</font>.66f, <font color="maroon">0</font>.6f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.7f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.6f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.6f, <font color="maroon">0</font>.0f, <font color="maroon">1</font>.425f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.6f, <font color="maroon">-0</font>.66f, <font color="maroon">1</font>.425f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">3</font>.1f, <font color="maroon">-0</font>.66f, <font color="maroon">0</font>.825f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">3</font>.1f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.825f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.3f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.1f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.3f, <font color="maroon">-0</font>.25f, <font color="maroon">2</font>.1f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.4f, <font color="maroon">-0</font>.25f, <font color="maroon">2</font>.025f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.4f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.025f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.7f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.7f, <font color="maroon">-0</font>.25f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">3</font>.3f, <font color="maroon">-0</font>.25f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">3</font>.3f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.8f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.475f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.8f, <font color="maroon">-0</font>.25f, <font color="maroon">2</font>.475f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">3</font>.525f, <font color="maroon">-0</font>.25f, <font color="maroon">2</font>.49375f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">3</font>.525f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.49375f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.9f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.475f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.9f, <font color="maroon">-0</font>.15f, <font color="maroon">2</font>.475f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">3</font>.45f, <font color="maroon">-0</font>.15f, <font color="maroon">2</font>.5125f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">3</font>.45f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.5125f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.8f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">2</font>.8f, <font color="maroon">-0</font>.15f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">3</font>.2f, <font color="maroon">-0</font>.15f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">3</font>.2f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">3</font>.15f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.8f, <font color="maroon">0</font>.0f, <font color="maroon">3</font>.15f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.8f, <font color="maroon">-0</font>.45f, <font color="maroon">3</font>.15f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.45f, <font color="maroon">-0</font>.8f, <font color="maroon">3</font>.15f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-0</font>.8f, <font color="maroon">3</font>.15f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.85f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.4f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.4f, <font color="maroon">-0</font>.784f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.784f, <font color="maroon">-1</font>.4f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-1</font>.4f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.4f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.55f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.4f, <font color="maroon">-0</font>.224f, <font color="maroon">2</font>.55f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.224f, <font color="maroon">-0</font>.4f, <font color="maroon">2</font>.55f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-0</font>.4f, <font color="maroon">2</font>.55f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.3f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.55f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.3f, <font color="maroon">-0</font>.728f, <font color="maroon">2</font>.55f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.728f, <font color="maroon">-1</font>.3f, <font color="maroon">2</font>.55f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-1</font>.3f, <font color="maroon">2</font>.55f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.3f, <font color="maroon">0</font>.0f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.3f, <font color="maroon">-0</font>.728f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.728f, <font color="maroon">-1</font>.3f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-1</font>.3f, <font color="maroon">2</font>.4f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.425f, <font color="maroon">-0</font>.798f, <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.5f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.075f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.425f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.798f, <font color="maroon">-1</font>.425f, <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-1</font>.5f, <font color="maroon">0</font>.075f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.0f, <font color="maroon">-1</font>.425f, <font color="maroon">0</font>.0f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">1</font>.5f, <font color="maroon">-0</font>.84f, <font color="maroon">0</font>.075f<font color="black">}</font>,
+            <font color="black">{</font><font color="maroon">0</font>.84f, <font color="maroon">-1</font>.5f, <font color="maroon">0</font>.075f<font color="black">}</font>
+        <font color="black">}</font>;
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">float</font><font color="black">[</font><font color="green">/*2*/</font>, <font color="green">/*2*/</font>, <font color="green">/*2*/</font><font color="black">]</font> tex <font color="black">=</font> <font color="black">{</font>
+            <font color="black">{</font>
+                <font color="black">{</font><font color="maroon">0</font>, <font color="maroon">0</font><font color="black">}</font>,
+                <font color="black">{</font><font color="maroon">1</font>, <font color="maroon">0</font><font color="black">}</font>
+            <font color="black">}</font>,
+            <font color="black">{</font>
+                <font color="black">{</font><font color="maroon">0</font>, <font color="maroon">1</font><font color="black">}</font>,
+                <font color="black">{</font><font color="maroon">1</font>, <font color="maroon">1</font><font color="black">}</font>
+            <font color="black">}</font>
+        <font color="black">}</font>;
+        <font color="blue">#endregion</font> Private Fields
+
+        <font color="green">// --- Private Methods ---</font>
+        <font color="blue">#region</font> DrawBox<font color="black">(</font><font color="blue">float</font> size, <font color="blue">uint</font> type<font color="black">)</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Draws a box.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="green">/// &#60;param name="size"&#62;The size of the box.&#60;/param&#62;</font>
+        <font color="green">/// &#60;param name="type"&#62;The type of drawing to do.&#60;/param&#62;</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> DrawBox<font color="black">(</font><font color="blue">float</font> size, <font color="blue">uint</font> type<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">float</font><font color="black">[</font> , <font color="black">]</font> v <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">8</font>, <font color="maroon">3</font><font color="black">]</font>;
+
+            v<font color="black">[</font><font color="maroon">0</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">1</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">2</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">3</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>size <font color="black">/</font> <font color="maroon">2</font>;
+            v<font color="black">[</font><font color="maroon">4</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">5</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">6</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">7</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font>  size <font color="black">/</font> <font color="maroon">2</font>;
+            v<font color="black">[</font><font color="maroon">0</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">1</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">4</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">5</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>size <font color="black">/</font> <font color="maroon">2</font>;
+            v<font color="black">[</font><font color="maroon">2</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">3</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">6</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">7</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font>  size <font color="black">/</font> <font color="maroon">2</font>;
+            v<font color="black">[</font><font color="maroon">0</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">3</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">4</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">7</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>size <font color="black">/</font> <font color="maroon">2</font>;
+            v<font color="black">[</font><font color="maroon">1</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">2</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">5</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> v<font color="black">[</font><font color="maroon">6</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font>  size <font color="black">/</font> <font color="maroon">2</font>;
+
+            <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> i <font color="black">=</font> <font color="maroon">5</font>; i <font color="black">&#62;</font><font color="black">=</font> <font color="maroon">0</font>; i<font color="black">-</font><font color="black">-</font><font color="black">)</font> <font color="black">{</font>
+                GL.glBegin<font color="black">(</font>type<font color="black">)</font>;
+                    GL.glNormal3f<font color="black">(</font>n<font color="black">[</font>i, <font color="maroon">0</font><font color="black">]</font>, n<font color="black">[</font>i, <font color="maroon">1</font><font color="black">]</font>, n<font color="black">[</font>i, <font color="maroon">2</font><font color="black">]</font><font color="black">)</font>;
+                    GL.glVertex3f<font color="black">(</font>v<font color="black">[</font>faces<font color="black">[</font>i, <font color="maroon">0</font><font color="black">]</font>, <font color="maroon">0</font><font color="black">]</font>, v<font color="black">[</font>faces<font color="black">[</font>i, <font color="maroon">0</font><font color="black">]</font>, <font color="maroon">1</font><font color="black">]</font>, v<font color="black">[</font>faces<font color="black">[</font>i, <font color="maroon">0</font><font color="black">]</font>, <font color="maroon">2</font><font color="black">]</font><font color="black">)</font>;
+                    GL.glVertex3f<font color="black">(</font>v<font color="black">[</font>faces<font color="black">[</font>i, <font color="maroon">1</font><font color="black">]</font>, <font color="maroon">0</font><font color="black">]</font>, v<font color="black">[</font>faces<font color="black">[</font>i, <font color="maroon">1</font><font color="black">]</font>, <font color="maroon">1</font><font color="black">]</font>, v<font color="black">[</font>faces<font color="black">[</font>i, <font color="maroon">1</font><font color="black">]</font>, <font color="maroon">2</font><font color="black">]</font><font color="black">)</font>;
+                    GL.glVertex3f<font color="black">(</font>v<font color="black">[</font>faces<font color="black">[</font>i, <font color="maroon">2</font><font color="black">]</font>, <font color="maroon">0</font><font color="black">]</font>, v<font color="black">[</font>faces<font color="black">[</font>i, <font color="maroon">2</font><font color="black">]</font>, <font color="maroon">1</font><font color="black">]</font>, v<font color="black">[</font>faces<font color="black">[</font>i, <font color="maroon">2</font><font color="black">]</font>, <font color="maroon">2</font><font color="black">]</font><font color="black">)</font>;
+                    GL.glVertex3f<font color="black">(</font>v<font color="black">[</font>faces<font color="black">[</font>i, <font color="maroon">3</font><font color="black">]</font>, <font color="maroon">0</font><font color="black">]</font>, v<font color="black">[</font>faces<font color="black">[</font>i, <font color="maroon">3</font><font color="black">]</font>, <font color="maroon">1</font><font color="black">]</font>, v<font color="black">[</font>faces<font color="black">[</font>i, <font color="maroon">3</font><font color="black">]</font>, <font color="maroon">2</font><font color="black">]</font><font color="black">)</font>;
+                GL.glEnd<font color="black">(</font><font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        <font color="blue">#endregion</font> DrawBox<font color="black">(</font><font color="blue">float</font> size, <font color="blue">uint</font> type<font color="black">)</font>
+
+        <font color="blue">#region</font> InitQuadObj<font color="black">(</font><font color="black">)</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Initializes a new quadric.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> InitQuadObj<font color="black">(</font><font color="black">)</font> <font color="black">{</font>
+            quadObj <font color="black">=</font> GL.gluNewQuadric<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="blue">#endregion</font> InitQuadObj<font color="black">(</font><font color="black">)</font>
+
+        <font color="blue">#region</font> QUAD_OBJ_INIT<font color="black">(</font><font color="black">)</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Ensures we have a valid quadric.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> QUAD_OBJ_INIT<font color="black">(</font><font color="black">)</font> <font color="black">{</font>
+            InitQuadObj<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="blue">#endregion</font> QUAD_OBJ_INIT<font color="black">(</font><font color="black">)</font>
+
+        <font color="blue">#region</font> Doughnut<font color="black">(</font><font color="blue">float</font> r, <font color="blue">float</font> R, <font color="blue">int</font> nsides, <font color="blue">int</font> rings<font color="black">)</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Draws a doughnut.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="green">/// &#60;param name="r"&#62;The inner radius.&#60;/param&#62;</font>
+        <font color="green">/// &#60;param name="R"&#62;The outer radius.&#60;/param&#62;</font>
+        <font color="green">/// &#60;param name="nsides"&#62;The number of sides.&#60;/param&#62;</font>
+        <font color="green">/// &#60;param name="rings"&#62;The number of rings.&#60;/param&#62;</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> Doughnut<font color="black">(</font><font color="blue">float</font> r, <font color="blue">float</font> R, <font color="blue">int</font> nsides, <font color="blue">int</font> rings<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">float</font> theta, phi, theta1;
+            <font color="blue">float</font> cosTheta, sinTheta;
+            <font color="blue">float</font> cosTheta1, sinTheta1;
+            <font color="blue">float</font> ringDelta, sideDelta;
+
+            ringDelta <font color="black">=</font> <font color="maroon">2</font>.0f <font color="black">*</font> M_PI <font color="black">/</font> rings;
+            sideDelta <font color="black">=</font> <font color="maroon">2</font>.0f <font color="black">*</font> M_PI <font color="black">/</font> nsides;
+
+            theta <font color="black">=</font> <font color="maroon">0</font>.0f;
+            cosTheta <font color="black">=</font> <font color="maroon">1</font>.0f;
+            sinTheta <font color="black">=</font> <font color="maroon">0</font>.0f;
+            <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> i <font color="black">=</font> rings <font color="maroon">-1</font>; i <font color="black">&#62;</font><font color="black">=</font> <font color="maroon">0</font>; i<font color="black">-</font><font color="black">-</font><font color="black">)</font> <font color="black">{</font>
+                theta1 <font color="black">=</font> theta <font color="black">+</font> ringDelta;
+                cosTheta1 <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> Math.Cos<font color="black">(</font>theta1<font color="black">)</font>;
+                sinTheta1 <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> Math.Sin<font color="black">(</font>theta1<font color="black">)</font>;
+                GL.glBegin<font color="black">(</font>GL.GL_QUAD_STRIP<font color="black">)</font>;
+                phi <font color="black">=</font> <font color="maroon">0</font>.0f;
+                <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> j <font color="black">=</font> nsides; j <font color="black">&#62;</font><font color="black">=</font> <font color="maroon">0</font>; j<font color="black">-</font><font color="black">-</font><font color="black">)</font> <font color="black">{</font>
+                    <font color="blue">float</font> cosPhi, sinPhi, dist;
+
+                    phi <font color="black">+</font><font color="black">=</font> sideDelta;
+                    cosPhi <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> Math.Cos<font color="black">(</font>phi<font color="black">)</font>;
+                    sinPhi <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> Math.Sin<font color="black">(</font>phi<font color="black">)</font>;
+                    dist <font color="black">=</font> R <font color="black">+</font> r <font color="black">*</font> cosPhi;
+
+                    GL.glNormal3f<font color="black">(</font>cosTheta1 <font color="black">*</font> cosPhi, <font color="black">-</font>sinTheta1 <font color="black">*</font> cosPhi, sinPhi<font color="black">)</font>;
+                    GL.glVertex3f<font color="black">(</font>cosTheta1 <font color="black">*</font> dist, <font color="black">-</font>sinTheta1 <font color="black">*</font> dist, r <font color="black">*</font> sinPhi<font color="black">)</font>;
+                    GL.glNormal3f<font color="black">(</font>cosTheta <font color="black">*</font> cosPhi, <font color="black">-</font>sinTheta <font color="black">*</font> cosPhi, sinPhi<font color="black">)</font>;
+                    GL.glVertex3f<font color="black">(</font>cosTheta <font color="black">*</font> dist, <font color="black">-</font>sinTheta <font color="black">*</font> dist,  r <font color="black">*</font> sinPhi<font color="black">)</font>;
+                <font color="black">}</font>
+                GL.glEnd<font color="black">(</font><font color="black">)</font>;
+                theta <font color="black">=</font> theta1;
+                cosTheta <font color="black">=</font> cosTheta1;
+                sinTheta <font color="black">=</font> sinTheta1;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        <font color="blue">#endregion</font> Doughnut<font color="black">(</font><font color="blue">float</font> r, <font color="blue">float</font> R, <font color="blue">int</font> nsides, <font color="blue">int</font> rings<font color="black">)</font>
+
+        <font color="blue">#region</font> InitDodecahedron<font color="black">(</font><font color="black">)</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Initializes the dodecahedron array.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> InitDodecahedron<font color="black">(</font><font color="black">)</font> <font color="black">{</font>
+            <font color="blue">float</font> alpha, beta;
+
+            alpha <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> <font color="black">(</font>Math.Sqrt<font color="black">(</font><font color="maroon">2</font>.0f <font color="black">/</font> <font color="black">(</font><font color="maroon">3</font>.0f <font color="black">+</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> <font color="black">(</font>Math.Sqrt<font color="black">(</font><font color="maroon">5</font>.0f<font color="black">)</font><font color="black">)</font><font color="black">)</font><font color="black">)</font><font color="black">)</font>;
+            beta <font color="black">=</font> <font color="maroon">1</font>.0f <font color="black">+</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> <font color="black">(</font>Math.Sqrt<font color="black">(</font><font color="maroon">6</font>.0f <font color="black">/</font> <font color="black">(</font><font color="maroon">3</font>.0f <font color="black">+</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> <font color="black">(</font>Math.Sqrt<font color="black">(</font><font color="maroon">5</font>.0f<font color="black">)</font><font color="black">)</font><font color="black">)</font><font color="black">)</font> <font color="maroon">-2</font>.0f <font color="black">+</font> <font color="maroon">2</font>.0f <font color="black">*</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> <font color="black">(</font>Math.Sqrt<font color="black">(</font><font color="maroon">2</font>.<font color="maroon">0</font> <font color="black">/</font> <font color="black">(</font><font color="maroon">3</font>.<font color="maroon">0</font> <font color="black">+</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> Math.Sqrt<font color="black">(</font><font color="maroon">5</font>.<font color="maroon">0</font><font color="black">)</font><font color="black">)</font><font color="black">)</font><font color="black">)</font><font color="black">)</font>;
+            dodec<font color="black">[</font><font color="maroon">0</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>alpha; dodec<font color="black">[</font><font color="maroon">0</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">0</font>; dodec<font color="black">[</font><font color="maroon">0</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> beta;
+            dodec<font color="black">[</font><font color="maroon">1</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> alpha; dodec<font color="black">[</font><font color="maroon">1</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">0</font>; dodec<font color="black">[</font><font color="maroon">1</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> beta;
+            dodec<font color="black">[</font><font color="maroon">2</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">-1</font>; dodec<font color="black">[</font><font color="maroon">2</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">-1</font>; dodec<font color="black">[</font><font color="maroon">2</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">-1</font>;
+            dodec<font color="black">[</font><font color="maroon">3</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">-1</font>; dodec<font color="black">[</font><font color="maroon">3</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">-1</font>; dodec<font color="black">[</font><font color="maroon">3</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">1</font>;
+            dodec<font color="black">[</font><font color="maroon">4</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">-1</font>; dodec<font color="black">[</font><font color="maroon">4</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">1</font>; dodec<font color="black">[</font><font color="maroon">4</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">-1</font>;
+            dodec<font color="black">[</font><font color="maroon">5</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">-1</font>; dodec<font color="black">[</font><font color="maroon">5</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">1</font>; dodec<font color="black">[</font><font color="maroon">5</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">1</font>;
+            dodec<font color="black">[</font><font color="maroon">6</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">1</font>; dodec<font color="black">[</font><font color="maroon">6</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">-1</font>; dodec<font color="black">[</font><font color="maroon">6</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">-1</font>;
+            dodec<font color="black">[</font><font color="maroon">7</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">1</font>; dodec<font color="black">[</font><font color="maroon">7</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">-1</font>; dodec<font color="black">[</font><font color="maroon">7</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">1</font>;
+            dodec<font color="black">[</font><font color="maroon">8</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">1</font>; dodec<font color="black">[</font><font color="maroon">8</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">1</font>; dodec<font color="black">[</font><font color="maroon">8</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">-1</font>;
+            dodec<font color="black">[</font><font color="maroon">9</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">1</font>; dodec<font color="black">[</font><font color="maroon">9</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">1</font>; dodec<font color="black">[</font><font color="maroon">9</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">1</font>;
+            dodec<font color="black">[</font><font color="maroon">10</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> beta; dodec<font color="black">[</font><font color="maroon">10</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> alpha; dodec<font color="black">[</font><font color="maroon">10</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">0</font>;
+            dodec<font color="black">[</font><font color="maroon">11</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> beta; dodec<font color="black">[</font><font color="maroon">11</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>alpha; dodec<font color="black">[</font><font color="maroon">11</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">0</font>;
+            dodec<font color="black">[</font><font color="maroon">12</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>beta; dodec<font color="black">[</font><font color="maroon">12</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> alpha; dodec<font color="black">[</font><font color="maroon">12</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">0</font>;
+            dodec<font color="black">[</font><font color="maroon">13</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>beta; dodec<font color="black">[</font><font color="maroon">13</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>alpha; dodec<font color="black">[</font><font color="maroon">13</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">0</font>;
+            dodec<font color="black">[</font><font color="maroon">14</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>alpha; dodec<font color="black">[</font><font color="maroon">14</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">0</font>; dodec<font color="black">[</font><font color="maroon">14</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>beta;
+            dodec<font color="black">[</font><font color="maroon">15</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> alpha; dodec<font color="black">[</font><font color="maroon">15</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">0</font>; dodec<font color="black">[</font><font color="maroon">15</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>beta;
+            dodec<font color="black">[</font><font color="maroon">16</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">0</font>; dodec<font color="black">[</font><font color="maroon">16</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> beta; dodec<font color="black">[</font><font color="maroon">16</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> alpha;
+            dodec<font color="black">[</font><font color="maroon">17</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">0</font>; dodec<font color="black">[</font><font color="maroon">17</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> beta; dodec<font color="black">[</font><font color="maroon">17</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>alpha;
+            dodec<font color="black">[</font><font color="maroon">18</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">0</font>; dodec<font color="black">[</font><font color="maroon">18</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>beta; dodec<font color="black">[</font><font color="maroon">18</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> alpha;
+            dodec<font color="black">[</font><font color="maroon">19</font>, <font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> <font color="maroon">0</font>; dodec<font color="black">[</font><font color="maroon">19</font>, <font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>beta; dodec<font color="black">[</font><font color="maroon">19</font>, <font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> <font color="black">-</font>alpha;
+        <font color="black">}</font>
+        <font color="blue">#endregion</font> InitDodecahedron<font color="black">(</font><font color="black">)</font>
+
+        <font color="blue">#region</font> Octahedron<font color="black">(</font><font color="blue">uint</font> shadeType<font color="black">)</font>
+        <font color="green">/// &#60;summary&#62;</font>
+        <font color="green">/// Draws an octahedron.</font>
+        <font color="green">/// &#60;/summary&#62;</font>
+        <font color="green">/// &#60;param name="shadeType"&#62;The type of shading for OpenGL to perform.&#60;/param&#62;</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> Octahedron<font color="black">(</font><font color="blue">uint</font> shadeType<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> i <font color="black">=</font> <font color="maroon">7</font>; i <font color="black">&#62;</font><font color="black">=</font> <font color="maroon">0</font>; i<font color="black">-</font><font color="black">-</font><font color="black">)</font> <font color="black">{</font>
+                DrawTriangle<font color="black">(</font>i, odata, ondex, shadeType<font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        <font color="blue">#endregion</font> Octahedron<font color="black">(</font><font color="blue">uint</font> shadeType<font color="black">)</font>
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> DIFF3<font color="black">(</font><font color="blue">float</font><font color="black">[</font><font color="black">]</font> a, <font color="blue">float</font><font color="black">[</font><font color="black">]</font> b, <font color="blue">float</font><font color="black">[</font><font color="black">]</font> c<font color="black">)</font> <font color="black">{</font>
+            c<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> a<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">-</font>b<font color="black">[</font><font color="maroon">0</font><font color="black">]</font>;
+            c<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> a<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">-</font>b<font color="black">[</font><font color="maroon">1</font><font color="black">]</font>;
+            c<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> a<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">-</font>b<font color="black">[</font><font color="maroon">2</font><font color="black">]</font>;
+        <font color="black">}</font>
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> CrossProduct<font color="black">(</font><font color="blue">float</font><font color="black">[</font><font color="black">]</font> v1, <font color="blue">float</font><font color="black">[</font><font color="black">]</font> v2, <font color="blue">float</font><font color="black">[</font><font color="black">]</font> prod<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> p <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">3</font><font color="black">]</font>;
+            p<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> v1<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">*</font> v2<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">-</font>v2<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">*</font> v1<font color="black">[</font><font color="maroon">2</font><font color="black">]</font>;
+            p<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> v1<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">*</font> v2<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">-</font>v2<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">*</font> v1<font color="black">[</font><font color="maroon">0</font><font color="black">]</font>;
+            p<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> v1<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">*</font> v2<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">-</font>v2<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">*</font> v1<font color="black">[</font><font color="maroon">1</font><font color="black">]</font>;
+            prod<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> p<font color="black">[</font><font color="maroon">0</font><font color="black">]</font>;
+            prod<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">=</font> p<font color="black">[</font><font color="maroon">1</font><font color="black">]</font>;
+            prod<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">=</font> p<font color="black">[</font><font color="maroon">2</font><font color="black">]</font>;
+        <font color="black">}</font>
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> Normalize<font color="black">(</font><font color="blue">float</font><font color="black">[</font><font color="black">]</font> v<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">float</font> d;
+            d <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> <font color="black">(</font>Math.Sqrt<font color="black">(</font>v<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">*</font> v<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">+</font> v<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">*</font> v<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">+</font> v<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">*</font> v<font color="black">[</font><font color="maroon">2</font><font color="black">]</font><font color="black">)</font><font color="black">)</font>;
+            <font color="blue">if</font><font color="black">(</font>d <font color="black">=</font><font color="black">=</font> <font color="maroon">0</font>.0f<font color="black">)</font> <font color="black">{</font>
+                v<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">=</font> d <font color="black">=</font> <font color="maroon">1</font>.0f;
+            <font color="black">}</font>
+            d <font color="black">=</font> <font color="maroon">1</font> <font color="black">/</font> d;
+            v<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">*</font><font color="black">=</font> d;
+            v<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">*</font><font color="black">=</font> d;
+            v<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">*</font><font color="black">=</font> d;
+        <font color="black">}</font>
+
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> Pentagon<font color="black">(</font><font color="blue">int</font> a, <font color="blue">int</font> b, <font color="blue">int</font> c, <font color="blue">int</font> d, <font color="blue">int</font> e, <font color="blue">uint</font> shadeType<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> n0 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">3</font><font color="black">]</font>;
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> d1 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">3</font><font color="black">]</font>;
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> d2 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">3</font><font color="black">]</font>;
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> da <font color="black">=</font> <font color="black">{</font>dodec<font color="black">[</font>a, <font color="maroon">0</font><font color="black">]</font>, dodec<font color="black">[</font>a, <font color="maroon">1</font><font color="black">]</font>, dodec<font color="black">[</font>a, <font color="maroon">2</font><font color="black">]</font><font color="black">}</font>;
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> db <font color="black">=</font> <font color="black">{</font>dodec<font color="black">[</font>b, <font color="maroon">0</font><font color="black">]</font>, dodec<font color="black">[</font>b, <font color="maroon">1</font><font color="black">]</font>, dodec<font color="black">[</font>b, <font color="maroon">2</font><font color="black">]</font><font color="black">}</font>;
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> dc <font color="black">=</font> <font color="black">{</font>dodec<font color="black">[</font>c, <font color="maroon">0</font><font color="black">]</font>, dodec<font color="black">[</font>c, <font color="maroon">1</font><font color="black">]</font>, dodec<font color="black">[</font>c, <font color="maroon">2</font><font color="black">]</font><font color="black">}</font>;
+
+            DIFF3<font color="black">(</font>da, db, d1<font color="black">)</font>;
+            DIFF3<font color="black">(</font>db, dc, d2<font color="black">)</font>;
+            CrossProduct<font color="black">(</font>d1, d2, n0<font color="black">)</font>;
+            Normalize<font color="black">(</font>n0<font color="black">)</font>;
+
+            GL.glBegin<font color="black">(</font>shadeType<font color="black">)</font>;
+                GL.glNormal3f<font color="black">(</font>n0<font color="black">[</font><font color="maroon">0</font><font color="black">]</font>, n0<font color="black">[</font><font color="maroon">1</font><font color="black">]</font>, n0<font color="black">[</font><font color="maroon">2</font><font color="black">]</font><font color="black">)</font>;
+                GL.glVertex3f<font color="black">(</font>dodec<font color="black">[</font>a, <font color="maroon">0</font><font color="black">]</font>, dodec<font color="black">[</font>a, <font color="maroon">1</font><font color="black">]</font>, dodec<font color="black">[</font>a, <font color="maroon">2</font><font color="black">]</font><font color="black">)</font>;
+                GL.glVertex3f<font color="black">(</font>dodec<font color="black">[</font>b, <font color="maroon">0</font><font color="black">]</font>, dodec<font color="black">[</font>b, <font color="maroon">1</font><font color="black">]</font>, dodec<font color="black">[</font>b, <font color="maroon">2</font><font color="black">]</font><font color="black">)</font>;
+                GL.glVertex3f<font color="black">(</font>dodec<font color="black">[</font>c, <font color="maroon">0</font><font color="black">]</font>, dodec<font color="black">[</font>c, <font color="maroon">1</font><font color="black">]</font>, dodec<font color="black">[</font>c, <font color="maroon">2</font><font color="black">]</font><font color="black">)</font>;
+                GL.glVertex3f<font color="black">(</font>dodec<font color="black">[</font>d, <font color="maroon">0</font><font color="black">]</font>, dodec<font color="black">[</font>d, <font color="maroon">1</font><font color="black">]</font>, dodec<font color="black">[</font>d, <font color="maroon">2</font><font color="black">]</font><font color="black">)</font>;
+                GL.glVertex3f<font color="black">(</font>dodec<font color="black">[</font>e, <font color="maroon">0</font><font color="black">]</font>, dodec<font color="black">[</font>e, <font color="maroon">1</font><font color="black">]</font>, dodec<font color="black">[</font>e, <font color="maroon">2</font><font color="black">]</font><font color="black">)</font>;
+            GL.glEnd<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> Dodecahedron<font color="black">(</font><font color="blue">uint</font> type<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">if</font><font color="black">(</font><font color="black">!</font>dodecinited<font color="black">)</font> <font color="black">{</font>
+                dodecinited <font color="black">=</font> <font color="blue">true</font>;
+                InitDodecahedron<font color="black">(</font><font color="black">)</font>;
+            <font color="black">}</font>
+            Pentagon<font color="black">(</font><font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">9</font>, <font color="maroon">16</font>, <font color="maroon">5</font>, type<font color="black">)</font>;
+            Pentagon<font color="black">(</font><font color="maroon">1</font>, <font color="maroon">0</font>, <font color="maroon">3</font>, <font color="maroon">18</font>, <font color="maroon">7</font>, type<font color="black">)</font>;
+            Pentagon<font color="black">(</font><font color="maroon">1</font>, <font color="maroon">7</font>, <font color="maroon">11</font>, <font color="maroon">10</font>, <font color="maroon">9</font>, type<font color="black">)</font>;
+            Pentagon<font color="black">(</font><font color="maroon">11</font>, <font color="maroon">7</font>, <font color="maroon">18</font>, <font color="maroon">19</font>, <font color="maroon">6</font>, type<font color="black">)</font>;
+            Pentagon<font color="black">(</font><font color="maroon">8</font>, <font color="maroon">17</font>, <font color="maroon">16</font>, <font color="maroon">9</font>, <font color="maroon">10</font>, type<font color="black">)</font>;
+            Pentagon<font color="black">(</font><font color="maroon">2</font>, <font color="maroon">14</font>, <font color="maroon">15</font>, <font color="maroon">6</font>, <font color="maroon">19</font>, type<font color="black">)</font>;
+            Pentagon<font color="black">(</font><font color="maroon">2</font>, <font color="maroon">13</font>, <font color="maroon">12</font>, <font color="maroon">4</font>, <font color="maroon">14</font>, type<font color="black">)</font>;
+            Pentagon<font color="black">(</font><font color="maroon">2</font>, <font color="maroon">19</font>, <font color="maroon">18</font>, <font color="maroon">3</font>, <font color="maroon">13</font>, type<font color="black">)</font>;
+            Pentagon<font color="black">(</font><font color="maroon">3</font>, <font color="maroon">0</font>, <font color="maroon">5</font>, <font color="maroon">12</font>, <font color="maroon">13</font>, type<font color="black">)</font>;
+            Pentagon<font color="black">(</font><font color="maroon">6</font>, <font color="maroon">15</font>, <font color="maroon">8</font>, <font color="maroon">10</font>, <font color="maroon">11</font>, type<font color="black">)</font>;
+            Pentagon<font color="black">(</font><font color="maroon">4</font>, <font color="maroon">17</font>, <font color="maroon">8</font>, <font color="maroon">15</font>, <font color="maroon">14</font>, type<font color="black">)</font>;
+            Pentagon<font color="black">(</font><font color="maroon">4</font>, <font color="maroon">12</font>, <font color="maroon">5</font>, <font color="maroon">16</font>, <font color="maroon">17</font>, type<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> RecordItem<font color="black">(</font><font color="blue">float</font><font color="black">[</font><font color="black">]</font> n1, <font color="blue">float</font><font color="black">[</font><font color="black">]</font> n2, <font color="blue">float</font><font color="black">[</font><font color="black">]</font> n3, <font color="blue">uint</font> shadeType<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> q0 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">3</font><font color="black">]</font>;
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> q1 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">3</font><font color="black">]</font>;
+
+            DIFF3<font color="black">(</font>n1, n2, q0<font color="black">)</font>;
+            DIFF3<font color="black">(</font>n2, n3, q1<font color="black">)</font>;
+            CrossProduct<font color="black">(</font>q0, q1, q1<font color="black">)</font>;
+            Normalize<font color="black">(</font>q1<font color="black">)</font>;
+
+            GL.glBegin<font color="black">(</font>shadeType<font color="black">)</font>;
+                GL.glNormal3fv<font color="black">(</font>q1<font color="black">)</font>;
+                GL.glVertex3fv<font color="black">(</font>n1<font color="black">)</font>;
+                GL.glVertex3fv<font color="black">(</font>n2<font color="black">)</font>;
+                GL.glVertex3fv<font color="black">(</font>n3<font color="black">)</font>;
+            GL.glEnd<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> Subdivide<font color="black">(</font><font color="blue">float</font><font color="black">[</font><font color="black">]</font> v0, <font color="blue">float</font><font color="black">[</font><font color="black">]</font> v1, <font color="blue">float</font><font color="black">[</font><font color="black">]</font> v2, <font color="blue">uint</font> shadeType<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">int</font> depth;
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> w0 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">3</font><font color="black">]</font>;
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> w1 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">3</font><font color="black">]</font>;
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> w2 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">3</font><font color="black">]</font>;
+            <font color="blue">float</font> l;
+            <font color="blue">int</font> i, j, k, n;
+
+            depth <font color="black">=</font> <font color="maroon">1</font>;
+            <font color="blue">for</font><font color="black">(</font>i <font color="black">=</font> <font color="maroon">0</font>; i <font color="black">&#60;</font> depth; i<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                <font color="blue">for</font><font color="black">(</font>j <font color="black">=</font> <font color="maroon">0</font>; i <font color="black">+</font> j <font color="black">&#60;</font> depth; j<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                    k <font color="black">=</font> depth <font color="black">-</font>i <font color="black">-</font>j;
+                    <font color="blue">for</font><font color="black">(</font>n <font color="black">=</font> <font color="maroon">0</font>; n <font color="black">&#60;</font> <font color="maroon">3</font>; n<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                        w0<font color="black">[</font>n<font color="black">]</font> <font color="black">=</font> <font color="black">(</font>i <font color="black">*</font> v0<font color="black">[</font>n<font color="black">]</font> <font color="black">+</font> j <font color="black">*</font> v1<font color="black">[</font>n<font color="black">]</font> <font color="black">+</font> k <font color="black">*</font> v2<font color="black">[</font>n<font color="black">]</font><font color="black">)</font> <font color="black">/</font> depth;
+                        w1<font color="black">[</font>n<font color="black">]</font> <font color="black">=</font> <font color="black">(</font><font color="black">(</font>i <font color="black">+</font> <font color="maroon">1</font><font color="black">)</font> <font color="black">*</font> v0<font color="black">[</font>n<font color="black">]</font> <font color="black">+</font> j <font color="black">*</font> v1<font color="black">[</font>n<font color="black">]</font> <font color="black">+</font> <font color="black">(</font>k <font color="maroon">-1</font><font color="black">)</font> <font color="black">*</font> v2<font color="black">[</font>n<font color="black">]</font><font color="black">)</font> <font color="black">/</font> depth;
+                        w2<font color="black">[</font>n<font color="black">]</font> <font color="black">=</font> <font color="black">(</font>i <font color="black">*</font> v0<font color="black">[</font>n<font color="black">]</font> <font color="black">+</font> <font color="black">(</font>j <font color="black">+</font> <font color="maroon">1</font><font color="black">)</font> <font color="black">*</font> v1<font color="black">[</font>n<font color="black">]</font> <font color="black">+</font> <font color="black">(</font>k <font color="maroon">-1</font><font color="black">)</font> <font color="black">*</font> v2<font color="black">[</font>n<font color="black">]</font><font color="black">)</font> <font color="black">/</font> depth;
+                    <font color="black">}</font>
+                    l <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> <font color="black">(</font>Math.Sqrt<font color="black">(</font>w0<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">*</font> w0<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">+</font> w0<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">*</font> w0<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">+</font> w0<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">*</font> w0<font color="black">[</font><font color="maroon">2</font><font color="black">]</font><font color="black">)</font><font color="black">)</font>;
+                    w0<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">/</font><font color="black">=</font> l;
+                    w0<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">/</font><font color="black">=</font> l;
+                    w0<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">/</font><font color="black">=</font> l;
+                    l <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> <font color="black">(</font>Math.Sqrt<font color="black">(</font>w1<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">*</font> w1<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">+</font> w1<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">*</font> w1<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">+</font> w1<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">*</font> w1<font color="black">[</font><font color="maroon">2</font><font color="black">]</font><font color="black">)</font><font color="black">)</font>;
+                    w1<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">/</font><font color="black">=</font> l;
+                    w1<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">/</font><font color="black">=</font> l;
+                    w1<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">/</font><font color="black">=</font> l;
+                    l <font color="black">=</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> <font color="black">(</font>Math.Sqrt<font color="black">(</font>w2<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">*</font> w2<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">+</font> w2<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">*</font> w2<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">+</font> w2<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">*</font> w2<font color="black">[</font><font color="maroon">2</font><font color="black">]</font><font color="black">)</font><font color="black">)</font>;
+                    w2<font color="black">[</font><font color="maroon">0</font><font color="black">]</font> <font color="black">/</font><font color="black">=</font> l;
+                    w2<font color="black">[</font><font color="maroon">1</font><font color="black">]</font> <font color="black">/</font><font color="black">=</font> l;
+                    w2<font color="black">[</font><font color="maroon">2</font><font color="black">]</font> <font color="black">/</font><font color="black">=</font> l;
+                    RecordItem<font color="black">(</font>w1, w0, w2, shadeType<font color="black">)</font>;
+                <font color="black">}</font>
+            <font color="black">}</font>
+        <font color="black">}</font>
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> DrawTriangle<font color="black">(</font><font color="blue">int</font> i, <font color="blue">float</font><font color="black">[</font> , <font color="black">]</font> data, <font color="blue">int</font><font color="black">[</font> , <font color="black">]</font> ndx, <font color="blue">uint</font> shadeType<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> x0 <font color="black">=</font> <font color="black">{</font>data<font color="black">[</font>ndx<font color="black">[</font>i, <font color="maroon">0</font><font color="black">]</font>, <font color="maroon">0</font><font color="black">]</font>, data<font color="black">[</font>ndx<font color="black">[</font>i, <font color="maroon">0</font><font color="black">]</font>, <font color="maroon">1</font><font color="black">]</font>, data<font color="black">[</font>ndx<font color="black">[</font>i, <font color="maroon">0</font><font color="black">]</font>, <font color="maroon">2</font><font color="black">]</font><font color="black">}</font>;
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> x1 <font color="black">=</font> <font color="black">{</font>data<font color="black">[</font>ndx<font color="black">[</font>i, <font color="maroon">1</font><font color="black">]</font>, <font color="maroon">0</font><font color="black">]</font>, data<font color="black">[</font>ndx<font color="black">[</font>i, <font color="maroon">1</font><font color="black">]</font>, <font color="maroon">1</font><font color="black">]</font>, data<font color="black">[</font>ndx<font color="black">[</font>i, <font color="maroon">1</font><font color="black">]</font>, <font color="maroon">2</font><font color="black">]</font><font color="black">}</font>;
+            <font color="blue">float</font><font color="black">[</font><font color="black">]</font> x2 <font color="black">=</font> <font color="black">{</font>data<font color="black">[</font>ndx<font color="black">[</font>i, <font color="maroon">2</font><font color="black">]</font>, <font color="maroon">0</font><font color="black">]</font>, data<font color="black">[</font>ndx<font color="black">[</font>i, <font color="maroon">2</font><font color="black">]</font>, <font color="maroon">1</font><font color="black">]</font>, data<font color="black">[</font>ndx<font color="black">[</font>i, <font color="maroon">2</font><font color="black">]</font>, <font color="maroon">2</font><font color="black">]</font><font color="black">}</font>;
+            Subdivide<font color="black">(</font>x0, x1, x2, shadeType<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> Icosahedron<font color="black">(</font><font color="blue">uint</font> shadeType<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> i <font color="black">=</font> <font color="maroon">19</font>; i <font color="black">&#62;</font><font color="black">=</font> <font color="maroon">0</font>; i<font color="black">-</font><font color="black">-</font><font color="black">)</font> <font color="black">{</font>
+                DrawTriangle<font color="black">(</font>i, idata, index, shadeType<font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> Tetrahedron<font color="black">(</font><font color="blue">uint</font> shadeType<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> i <font color="black">=</font> <font color="maroon">3</font>; i <font color="black">&#62;</font><font color="black">=</font> <font color="maroon">0</font>; i<font color="black">-</font><font color="black">-</font><font color="black">)</font> <font color="black">{</font>
+                DrawTriangle<font color="black">(</font>i, tdata, tndex, shadeType<font color="black">)</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">void</font> DrawTeapot<font color="black">(</font><font color="blue">int</font> grid, <font color="blue">double</font> scale, <font color="blue">uint</font> type<font color="black">)</font> <font color="black">{</font>
+            <font color="blue">float</font><font color="black">[</font> , , <font color="black">]</font> p <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">4</font>, <font color="maroon">4</font>, <font color="maroon">3</font><font color="black">]</font>;
+            <font color="blue">float</font><font color="black">[</font> , , <font color="black">]</font> q <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">4</font>, <font color="maroon">4</font>, <font color="maroon">3</font><font color="black">]</font>;
+            <font color="blue">float</font><font color="black">[</font> , , <font color="black">]</font> r <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">4</font>, <font color="maroon">4</font>, <font color="maroon">3</font><font color="black">]</font>;
+            <font color="blue">float</font><font color="black">[</font> , , <font color="black">]</font> s <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">4</font>, <font color="maroon">4</font>, <font color="maroon">3</font><font color="black">]</font>;
+            <font color="blue">long</font> i, j, k, l;
+
+            GL.glPushAttrib<font color="black">(</font>GL.GL_ENABLE_BIT <font color="black">|</font> GL.GL_EVAL_BIT<font color="black">)</font>;
+            GL.glEnable<font color="black">(</font>GL.GL_AUTO_NORMAL<font color="black">)</font>;
+            GL.glEnable<font color="black">(</font>GL.GL_NORMALIZE<font color="black">)</font>;
+            GL.glEnable<font color="black">(</font>GL.GL_MAP2_VERTEX_3<font color="black">)</font>;
+            GL.glEnable<font color="black">(</font>GL.GL_MAP2_TEXTURE_COORD_2<font color="black">)</font>;
+            GL.glPushMatrix<font color="black">(</font><font color="black">)</font>;
+            GL.glRotatef<font color="black">(</font><font color="maroon">270</font>.0f, <font color="maroon">1</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">0</font>.0f<font color="black">)</font>;
+            GL.glScalef<font color="black">(</font><font color="maroon">0</font>.5f <font color="black">*</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> scale, <font color="maroon">0</font>.5f <font color="black">*</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> scale, <font color="maroon">0</font>.5f <font color="black">*</font> <font color="black">(</font><font color="blue">float</font><font color="black">)</font> scale<font color="black">)</font>;
+            GL.glTranslatef<font color="black">(</font><font color="maroon">0</font>.0f, <font color="maroon">0</font>.0f, <font color="maroon">-1</font>.5f<font color="black">)</font>;
+            <font color="blue">for</font><font color="black">(</font>i <font color="black">=</font> <font color="maroon">0</font>; i <font color="black">&#60;</font> <font color="maroon">10</font>; i<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                <font color="blue">for</font><font color="black">(</font>j <font color="black">=</font> <font color="maroon">0</font>; j <font color="black">&#60;</font> <font color="maroon">4</font>; j<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                    <font color="blue">for</font><font color="black">(</font>k <font color="black">=</font> <font color="maroon">0</font>; k <font color="black">&#60;</font> <font color="maroon">4</font>; k<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                        <font color="blue">for</font><font color="black">(</font>l <font color="black">=</font> <font color="maroon">0</font>; l <font color="black">&#60;</font> <font color="maroon">3</font>; l<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                            p<font color="black">[</font>j, k, l<font color="black">]</font> <font color="black">=</font> cpdata<font color="black">[</font>patchdata<font color="black">[</font>i, j <font color="black">*</font> <font color="maroon">4</font> <font color="black">+</font> k<font color="black">]</font>, l<font color="black">]</font>;
+                            q<font color="black">[</font>j, k, l<font color="black">]</font> <font color="black">=</font> cpdata<font color="black">[</font>patchdata<font color="black">[</font>i, j <font color="black">*</font> <font color="maroon">4</font> <font color="black">+</font> <font color="black">(</font><font color="maroon">3</font> <font color="black">-</font>k<font color="black">)</font><font color="black">]</font>, l<font color="black">]</font>;
+                            <font color="blue">if</font><font color="black">(</font>l <font color="black">=</font><font color="black">=</font> <font color="maroon">1</font><font color="black">)</font> <font color="black">{</font>
+                                q<font color="black">[</font>j, k, l<font color="black">]</font> <font color="black">*</font><font color="black">=</font> <font color="maroon">-1</font>.0f;
+                            <font color="black">}</font>
+                            <font color="blue">if</font><font color="black">(</font>i <font color="black">&#60;</font> <font color="maroon">6</font><font color="black">)</font> <font color="black">{</font>
+                                r<font color="black">[</font>j, k, l<font color="black">]</font> <font color="black">=</font> cpdata<font color="black">[</font>patchdata<font color="black">[</font>i, j <font color="black">*</font> <font color="maroon">4</font> <font color="black">+</font> <font color="black">(</font><font color="maroon">3</font> <font color="black">-</font>k<font color="black">)</font><font color="black">]</font>, l<font color="black">]</font>;
+                                <font color="blue">if</font><font color="black">(</font>l <font color="black">=</font><font color="black">=</font> <font color="maroon">0</font><font color="black">)</font> <font color="black">{</font>
+                                    r<font color="black">[</font>j, k, l<font color="black">]</font> <font color="black">*</font><font color="black">=</font> <font color="maroon">-1</font>.0f;
+                                <font color="black">}</font>
+                                s<font color="black">[</font>j, k, l<font color="black">]</font> <font color="black">=</font> cpdata<font color="black">[</font>patchdata<font color="black">[</font>i, j <font color="black">*</font> <font color="maroon">4</font> <font color="black">+</font> k<font color="black">]</font>, l<font color="black">]</font>;
+                                <font color="blue">if</font><font color="black">(</font>l <font color="black">=</font><font color="black">=</font> <font color="maroon">0</font><font color="black">)</font> <font color="black">{</font>
+                                    s<font color="black">[</font>j, k, l<font color="black">]</font> <font color="black">*</font><font color="black">=</font> <font color="maroon">-1</font>.0f;
+                                <font color="black">}</font>
+                                <font color="blue">if</font><font color="black">(</font>l <font color="black">=</font><font color="black">=</font> <font color="maroon">1</font><font color="black">)</font> <font color="black">{</font>
+                                    s<font color="black">[</font>j, k, l<font color="black">]</font> <font color="black">*</font><font color="black">=</font> <font color="maroon">-1</font>.0f;
+                                <font color="black">}</font>
+                            <font color="black">}</font>
+                        <font color="black">}</font>
+                    <font color="black">}</font>
+                <font color="black">}</font>
+
+                <font color="blue">int</font> cnt <font color="black">=</font> <font color="maroon">0</font>;
+                <font color="blue">float</font><font color="black">[</font><font color="black">]</font> tex1 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">8</font><font color="black">]</font>;
+                <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> d <font color="black">=</font> <font color="maroon">0</font>; d <font color="black">&#60;</font> <font color="maroon">2</font>; d<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                    <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> e <font color="black">=</font> <font color="maroon">0</font>; e <font color="black">&#60;</font> <font color="maroon">2</font>; e<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                        <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> f <font color="black">=</font> <font color="maroon">0</font>; f <font color="black">&#60;</font> <font color="maroon">2</font>; f<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                            tex1<font color="black">[</font>cnt<font color="black">]</font> <font color="black">=</font> tex<font color="black">[</font>d, e, f<font color="black">]</font>;
+                            cnt<font color="black">+</font><font color="black">+</font>;
+                        <font color="black">}</font>
+                    <font color="black">}</font>
+                <font color="black">}</font>
+                GL.glMap2f<font color="black">(</font>GL.GL_MAP2_TEXTURE_COORD_2, <font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">2</font>, <font color="maroon">2</font>, <font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">4</font>, <font color="maroon">2</font>, tex1<font color="black">)</font>;
+
+                cnt <font color="black">=</font> <font color="maroon">0</font>;
+                <font color="blue">float</font><font color="black">[</font><font color="black">]</font> p1 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">48</font><font color="black">]</font>;
+                <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> d <font color="black">=</font> <font color="maroon">0</font>; d <font color="black">&#60;</font> <font color="maroon">4</font>; d<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                    <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> e <font color="black">=</font> <font color="maroon">0</font>; e <font color="black">&#60;</font> <font color="maroon">4</font>; e<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                        <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> f <font color="black">=</font> <font color="maroon">0</font>; f <font color="black">&#60;</font> <font color="maroon">3</font>; f<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                            p1<font color="black">[</font>cnt<font color="black">]</font> <font color="black">=</font> p<font color="black">[</font>d, e, f<font color="black">]</font>;
+                            cnt<font color="black">+</font><font color="black">+</font>;
+                        <font color="black">}</font>
+                    <font color="black">}</font>
+                <font color="black">}</font>
+                GL.glMap2f<font color="black">(</font>GL.GL_MAP2_VERTEX_3, <font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">3</font>, <font color="maroon">4</font>, <font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">12</font>, <font color="maroon">4</font>, p1<font color="black">)</font>;
+                GL.glMapGrid2f<font color="black">(</font>grid, <font color="maroon">0</font>.0f, <font color="maroon">1</font>.0f, grid, <font color="maroon">0</font>.0f, <font color="maroon">1</font>.0f<font color="black">)</font>;
+                GL.glEvalMesh2<font color="black">(</font>type, <font color="maroon">0</font>, grid, <font color="maroon">0</font>, grid<font color="black">)</font>;
+
+                cnt <font color="black">=</font> <font color="maroon">0</font>;
+                <font color="blue">int</font> cnt1 <font color="black">=</font> <font color="maroon">0</font>;
+                <font color="blue">int</font> cnt2 <font color="black">=</font> <font color="maroon">0</font>;
+                <font color="blue">float</font><font color="black">[</font><font color="black">]</font> q1 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">48</font><font color="black">]</font>;
+                <font color="blue">float</font><font color="black">[</font><font color="black">]</font> r1 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">48</font><font color="black">]</font>;
+                <font color="blue">float</font><font color="black">[</font><font color="black">]</font> s1 <font color="black">=</font> <font color="blue">new</font> <font color="blue">float</font><font color="black">[</font><font color="maroon">48</font><font color="black">]</font>;
+                <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> d <font color="black">=</font> <font color="maroon">0</font>; d <font color="black">&#60;</font> <font color="maroon">4</font>; d<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                    <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> e <font color="black">=</font> <font color="maroon">0</font>; e <font color="black">&#60;</font> <font color="maroon">4</font>; e<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                        <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> f <font color="black">=</font> <font color="maroon">0</font>; f <font color="black">&#60;</font> <font color="maroon">3</font>; f<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                            q1<font color="black">[</font>cnt<font color="black">]</font> <font color="black">=</font> q<font color="black">[</font>d, e, f<font color="black">]</font>;
+                            cnt<font color="black">+</font><font color="black">+</font>;
+                        <font color="black">}</font>
+                    <font color="black">}</font>
+                <font color="black">}</font>
+                GL.glMap2f<font color="black">(</font>GL.GL_MAP2_VERTEX_3, <font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">3</font>, <font color="maroon">4</font>, <font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">12</font>, <font color="maroon">4</font>, q1<font color="black">)</font>;
+                GL.glEvalMesh2<font color="black">(</font>type, <font color="maroon">0</font>, grid, <font color="maroon">0</font>, grid<font color="black">)</font>;
+                <font color="blue">if</font><font color="black">(</font>i <font color="black">&#60;</font> <font color="maroon">6</font><font color="black">)</font> <font color="black">{</font>
+                    <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> d <font color="black">=</font> <font color="maroon">0</font>; d <font color="black">&#60;</font> <font color="maroon">4</font>; d<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                        <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> e <font color="black">=</font> <font color="maroon">0</font>; e <font color="black">&#60;</font> <font color="maroon">4</font>; e<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                            <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> f <font color="black">=</font> <font color="maroon">0</font>; f <font color="black">&#60;</font> <font color="maroon">3</font>; f<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                                r1<font color="black">[</font>cnt1<font color="black">]</font> <font color="black">=</font> r<font color="black">[</font>d, e, f<font color="black">]</font>;
+                                cnt1<font color="black">+</font><font color="black">+</font>;
+                            <font color="black">}</font>
+                        <font color="black">}</font>
+                    <font color="black">}</font>
+                    GL.glMap2f<font color="black">(</font>GL.GL_MAP2_VERTEX_3, <font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">3</font>, <font color="maroon">4</font>, <font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">12</font>, <font color="maroon">4</font>, r1<font color="black">)</font>;
+                    GL.glEvalMesh2<font color="black">(</font>type, <font color="maroon">0</font>, grid, <font color="maroon">0</font>, grid<font color="black">)</font>;
+
+                    <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> d <font color="black">=</font> <font color="maroon">0</font>; d <font color="black">&#60;</font> <font color="maroon">4</font>; d<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                        <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> e <font color="black">=</font> <font color="maroon">0</font>; e <font color="black">&#60;</font> <font color="maroon">4</font>; e<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                            <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> f <font color="black">=</font> <font color="maroon">0</font>; f <font color="black">&#60;</font> <font color="maroon">3</font>; f<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                                s1<font color="black">[</font>cnt2<font color="black">]</font> <font color="black">=</font> s<font color="black">[</font>d, e, f<font color="black">]</font>;
+                                cnt2<font color="black">+</font><font color="black">+</font>;
+                            <font color="black">}</font>
+                        <font color="black">}</font>
+                    <font color="black">}</font>
+                    GL.glMap2f<font color="black">(</font>GL.GL_MAP2_VERTEX_3, <font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">3</font>, <font color="maroon">4</font>, <font color="maroon">0</font>, <font color="maroon">1</font>, <font color="maroon">12</font>, <font color="maroon">4</font>, s1<font color="black">)</font>;
+                    GL.glEvalMesh2<font color="black">(</font>type, <font color="maroon">0</font>, grid, <font color="maroon">0</font>, grid<font color="black">)</font>;
+                <font color="black">}</font>
+            <font color="black">}</font>
+            GL.glPopMatrix<font color="black">(</font><font color="black">)</font>;
+            GL.glPopAttrib<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+
+
+
+
+
+
+        <font color="green">// --- Public Methods ---</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutWireSphere<font color="black">(</font><font color="blue">double</font> radius, <font color="blue">int</font> slices, <font color="blue">int</font> stacks<font color="black">)</font> <font color="black">{</font>
+            QUAD_OBJ_INIT<font color="black">(</font><font color="black">)</font>;
+            GL.gluQuadricDrawStyle<font color="black">(</font>quadObj, GL.GLU_LINE<font color="black">)</font>;
+            GL.gluQuadricNormals<font color="black">(</font>quadObj, GL.GLU_SMOOTH<font color="black">)</font>;
+            <font color="green">// If we ever changed/used the texture or orientation state</font>
+            <font color="green">// of quadObj, we'd need to change it to the defaults here</font>
+            <font color="green">// with gluQuadricTexture and/or gluQuadricOrientation.</font>
+            GL.gluSphere<font color="black">(</font>quadObj, radius, slices, stacks<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutSolidSphere<font color="black">(</font><font color="blue">double</font> radius, <font color="blue">int</font> slices, <font color="blue">int</font> stacks<font color="black">)</font> <font color="black">{</font>
+            QUAD_OBJ_INIT<font color="black">(</font><font color="black">)</font>;
+            GL.gluQuadricDrawStyle<font color="black">(</font>quadObj, GL.GLU_FILL<font color="black">)</font>;
+            GL.gluQuadricNormals<font color="black">(</font>quadObj, GL.GLU_SMOOTH<font color="black">)</font>;
+            <font color="green">// If we ever changed/used the texture or orientation state</font>
+            <font color="green">// of quadObj, we'd need to change it to the defaults here</font>
+            <font color="green">// with gluQuadricTexture and/or gluQuadricOrientation.</font>
+            GL.gluSphere<font color="black">(</font>quadObj, radius, slices, stacks<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutWireCone<font color="black">(</font><font color="blue">double</font> conebase, <font color="blue">double</font> height, <font color="blue">int</font> slices, <font color="blue">int</font> stacks<font color="black">)</font> <font color="black">{</font>
+            QUAD_OBJ_INIT<font color="black">(</font><font color="black">)</font>;
+            GL.gluQuadricDrawStyle<font color="black">(</font>quadObj, GL.GLU_LINE<font color="black">)</font>;
+            GL.gluQuadricNormals<font color="black">(</font>quadObj, GL.GLU_SMOOTH<font color="black">)</font>;
+            <font color="green">// If we ever changed/used the texture or orientation state</font>
+            <font color="green">// of quadObj, we'd need to change it to the defaults here</font>
+            <font color="green">// with gluQuadricTexture and/or gluQuadricOrientation.</font>
+            GL.gluCylinder<font color="black">(</font>quadObj, conebase, <font color="maroon">0</font>.<font color="maroon">0</font>, height, slices, stacks<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutSolidCone<font color="black">(</font><font color="blue">double</font> conebase, <font color="blue">double</font> height, <font color="blue">int</font> slices, <font color="blue">int</font> stacks<font color="black">)</font> <font color="black">{</font>
+            QUAD_OBJ_INIT<font color="black">(</font><font color="black">)</font>;
+            GL.gluQuadricDrawStyle<font color="black">(</font>quadObj, GL.GLU_FILL<font color="black">)</font>;
+            GL.gluQuadricNormals<font color="black">(</font>quadObj, GL.GLU_SMOOTH<font color="black">)</font>;
+            <font color="green">// If we ever changed/used the texture or orientation state</font>
+            <font color="green">// of quadObj, we'd need to change it to the defaults here</font>
+            <font color="green">// with gluQuadricTexture and/or gluQuadricOrientation.</font>
+            GL.gluCylinder<font color="black">(</font>quadObj, conebase, <font color="maroon">0</font>.<font color="maroon">0</font>, height, slices, stacks<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutWireCube<font color="black">(</font><font color="blue">double</font> size<font color="black">)</font> <font color="black">{</font>
+            DrawBox<font color="black">(</font><font color="black">(</font><font color="blue">float</font><font color="black">)</font> size, GL.GL_LINE_LOOP<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutSolidCube<font color="black">(</font><font color="blue">double</font> size<font color="black">)</font> <font color="black">{</font>
+            DrawBox<font color="black">(</font><font color="black">(</font><font color="blue">float</font><font color="black">)</font> size, GL.GL_QUADS<font color="black">)</font>;
+        <font color="black">}</font>
+
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutWireTorus<font color="black">(</font><font color="blue">double</font> innerRadius, <font color="blue">double</font> outerRadius, <font color="blue">int</font> nsides, <font color="blue">int</font> rings<font color="black">)</font> <font color="black">{</font>
+            GL.glPushAttrib<font color="black">(</font>GL.GL_POLYGON_BIT<font color="black">)</font>;
+                GL.glPolygonMode<font color="black">(</font>GL.GL_FRONT_AND_BACK, GL.GL_LINE<font color="black">)</font>;
+                Doughnut<font color="black">(</font><font color="black">(</font><font color="blue">float</font><font color="black">)</font> innerRadius, <font color="black">(</font><font color="blue">float</font><font color="black">)</font> outerRadius, nsides, rings<font color="black">)</font>;
+            GL.glPopAttrib<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutSolidTorus<font color="black">(</font><font color="blue">double</font> innerRadius, <font color="blue">double</font> outerRadius, <font color="blue">int</font> nsides, <font color="blue">int</font> rings<font color="black">)</font> <font color="black">{</font>
+            Doughnut<font color="black">(</font><font color="black">(</font><font color="blue">float</font><font color="black">)</font> innerRadius, <font color="black">(</font><font color="blue">float</font><font color="black">)</font> outerRadius, nsides, rings<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutWireDodecahedron<font color="black">(</font><font color="black">)</font> <font color="black">{</font>
+            Dodecahedron<font color="black">(</font>GL.GL_LINE_LOOP<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutSolidDodecahedron<font color="black">(</font><font color="black">)</font> <font color="black">{</font>
+            Dodecahedron<font color="black">(</font>GL.GL_TRIANGLE_FAN<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutWireOctahedron<font color="black">(</font><font color="black">)</font> <font color="black">{</font>
+            Octahedron<font color="black">(</font>GL.GL_LINE_LOOP<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutSolidOctahedron<font color="black">(</font><font color="black">)</font> <font color="black">{</font>
+            Octahedron<font color="black">(</font>GL.GL_TRIANGLES<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutWireIcosahedron<font color="black">(</font><font color="black">)</font> <font color="black">{</font>
+            Icosahedron<font color="black">(</font>GL.GL_LINE_LOOP<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutSolidIcosahedron<font color="black">(</font><font color="black">)</font> <font color="black">{</font>
+            Icosahedron<font color="black">(</font>GL.GL_TRIANGLES<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutWireTetrahedron<font color="black">(</font><font color="black">)</font> <font color="black">{</font>
+            Tetrahedron<font color="black">(</font>GL.GL_LINE_LOOP<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutSolidTetrahedron<font color="black">(</font><font color="black">)</font> <font color="black">{</font>
+            Tetrahedron<font color="black">(</font>GL.GL_TRIANGLES<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutSolidTeapot<font color="black">(</font><font color="blue">double</font> scale<font color="black">)</font> <font color="black">{</font>
+            DrawTeapot<font color="black">(</font><font color="maroon">14</font>, scale, GL.GL_FILL<font color="black">)</font>;
+        <font color="black">}</font>
+
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> glutWireTeapot<font color="black">(</font><font color="blue">double</font> scale<font color="black">)</font> <font color="black">{</font>
+            DrawTeapot<font color="black">(</font><font color="maroon">10</font>, scale, GL.GL_LINE<font color="black">)</font>;
+        <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

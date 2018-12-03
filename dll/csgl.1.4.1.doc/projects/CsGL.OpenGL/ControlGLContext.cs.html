@@ -1,0 +1,84 @@
+<HTML>
+<HEAD>
+<TITLE>
+ControlGLContext.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Collections;
+<font color="blue">using</font> System.Text;
+<font color="blue">using</font> System.Threading;
+<font color="blue">using</font> System.Runtime.InteropServices;
+<font color="blue">using</font> System.Drawing;
+<font color="blue">using</font> System.Drawing.Imaging;
+<font color="blue">using</font> System.Windows.Forms;
+
+<font color="blue">namespace</font> CsGL.OpenGL
+<font color="black">{</font>
+    <font color="green">/** a concrete subclass of OpenGLContext for Control.
+     * You should call Create yourself to activate this context
+     * */</font>
+    <font color="blue">public</font> <font color="blue">class</font> ControlGLContext <font color="black">:</font> OpenGLContext
+    <font color="black">{</font>
+        <font color="blue">protected</font> <font color="blue">readonly</font> Control control;
+        <font color="blue">public</font> ControlGLContext<font color="black">(</font>Control c<font color="black">)</font>
+        <font color="black">{</font>
+            control <font color="black">=</font> c;
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">override</font> <font color="blue">void</font> Dispose<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">base</font>.Dispose<font color="black">(</font><font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">override</font> IntPtr GetNativeGDI<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">return</font> GetNativeGDI<font color="black">(</font>control.Handle<font color="black">)</font>;
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">override</font> <font color="blue">void</font> ReleaseNativeGDI<font color="black">(</font>IntPtr p<font color="black">)</font>
+        <font color="black">{</font>
+            ReleaseNativeGDI<font color="black">(</font>control.Handle, p<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_getWndGDI"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> IntPtr GetNativeGDI<font color="black">(</font>IntPtr hwnd<font color="black">)</font>;
+        <font color="black">[</font>DllImport<font color="black">(</font>CSGL, EntryPoint<font color="black">=</font><font color="marooon">"csgl_opengl_letWndGDI"</font>, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">private</font> <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> ReleaseNativeGDI<font color="black">(</font>IntPtr hwnd, IntPtr p<font color="black">)</font>;
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>

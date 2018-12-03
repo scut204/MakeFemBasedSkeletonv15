@@ -1,0 +1,168 @@
+<HTML>
+<HEAD>
+<TITLE>
+ScreenSetting.cs
+</TITLE>
+</HEAD>
+<BODY>
+<PRE>
+<font color="green">/*
+ * BSD Licence:
+ * Copyright (c) 2001, Lloyd Dupont (lloyd@galador.net)
+ * &#60;ORGANIZATION&#62; 
+ * All rights reserved.
+ * 
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the &#60;ORGANIZATION&#62; nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */</font>
+<font color="blue">using</font> System;
+<font color="blue">using</font> System.Collections;
+<font color="blue">using</font> System.Threading;
+<font color="blue">using</font> System.Runtime.InteropServices;
+
+<font color="blue">namespace</font> CsGL.Util
+<font color="black">{</font>
+    <font color="blue">public</font> <font color="blue">struct</font> ScreenSetting
+    <font color="black">{</font>
+        <font color="green">/** the number of horizontal pixel for this mode */</font>
+        <font color="blue">public</font> <font color="blue">int</font> Width;
+        
+        <font color="green">/** the number of vertical pixel for this mode */</font>
+        <font color="blue">public</font> <font color="blue">int</font> Height;
+        
+        <font color="green">/** the number of color bit for this mode */</font>
+        <font color="blue">public</font> <font color="blue">int</font> CDepth;
+        
+        <font color="blue">public</font> ScreenSetting<font color="black">(</font><font color="blue">int</font> w, <font color="blue">int</font> h<font color="black">)</font>
+        <font color="black">{</font>
+            ScreenSetting ss <font color="black">=</font> CurrentDisplay;
+            Width <font color="black">=</font> w;
+            Height <font color="black">=</font> h;
+            CDepth <font color="black">=</font> ss.CDepth;
+        <font color="black">}</font>
+        <font color="blue">public</font> ScreenSetting<font color="black">(</font><font color="blue">int</font> w, <font color="blue">int</font> h, <font color="blue">int</font> depth<font color="black">)</font>
+        <font color="black">{</font>
+            Width <font color="black">=</font> w;
+            Height <font color="black">=</font> h;
+            CDepth <font color="black">=</font> depth;
+        <font color="black">}</font>
+        
+        <font color="green">// verify the mode is available</font>
+        <font color="blue">public</font> <font color="blue">bool</font> Valid
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font>
+                <font color="blue">int</font> n <font color="black">=</font> CountDisplay;
+                <font color="blue">for</font><font color="black">(</font><font color="blue">int</font> i<font color="black">=</font><font color="maroon">0</font>; i<font color="black">&#60;</font>n; i<font color="black">+</font><font color="black">+</font><font color="black">)</font> <font color="black">{</font>
+                    ScreenSetting ss <font color="black">=</font> GetDisplay<font color="black">(</font>i<font color="black">)</font>;
+                    <font color="blue">if</font><font color="black">(</font>ss.Equals<font color="black">(</font><font color="blue">this</font><font color="black">)</font><font color="black">)</font>
+                        <font color="blue">return</font> <font color="blue">true</font>;
+                <font color="black">}</font>
+                <font color="blue">return</font> <font color="blue">false</font>;
+            <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">bool</font> Equals<font color="black">(</font>ScreenSetting ss<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">return</font> Width <font color="black">=</font><font color="black">=</font> ss.Width 
+                <font color="black">&</font><font color="black">&</font> Height <font color="black">=</font><font color="black">=</font> ss.Height 
+                <font color="black">&</font><font color="black">&</font> CDepth <font color="black">=</font><font color="black">=</font> ss.CDepth;
+        <font color="black">}</font>
+        <font color="blue">public</font> <font color="blue">override</font> string ToString<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">return</font> Width<font color="black">+</font><font color="marooon">"x"</font><font color="black">+</font>Height<font color="black">+</font><font color="marooon">" x"</font><font color="black">+</font>CDepth<font color="black">+</font><font color="marooon">"bpp"</font>;
+        <font color="black">}</font>
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CsGL.OSLib.CSGL, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> csgl_screen_setDisplay<font color="black">(</font><font color="blue">int</font> w, <font color="blue">int</font> h, <font color="blue">int</font> bpp<font color="black">)</font>;
+        
+        <font color="green">/** set this setting as the current display */</font>
+        <font color="blue">public</font> <font color="blue">void</font> Set<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            csgl_screen_setDisplay<font color="black">(</font>Width, Height, CDepth<font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="green">/** revert the original display setting */</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">void</font> Reset<font color="black">(</font><font color="black">)</font>
+        <font color="black">{</font>
+            csgl_screen_setDisplay<font color="black">(</font><font color="maroon">0</font>, <font color="maroon">0</font>, <font color="maroon">0</font><font color="black">)</font>;
+        <font color="black">}</font>
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CsGL.OSLib.CSGL, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">int</font> csgl_screen_countDisplay<font color="black">(</font><font color="black">)</font>;
+        
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">int</font> CountDisplay
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> csgl_screen_countDisplay<font color="black">(</font><font color="black">)</font>; <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CsGL.OSLib.CSGL, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">void</font> csgl_screen_getDisplay<font color="black">(</font><font color="blue">int</font> index, <font color="blue">out</font> <font color="blue">int</font> w, <font color="blue">out</font> <font color="blue">int</font> h, <font color="blue">out</font> <font color="blue">int</font> c<font color="black">)</font>;
+        
+        <font color="blue">public</font> <font color="blue">static</font> ScreenSetting GetDisplay<font color="black">(</font><font color="blue">int</font> index<font color="black">)</font>
+        <font color="black">{</font>
+            ScreenSetting ss <font color="black">=</font> <font color="blue">new</font> ScreenSetting<font color="black">(</font><font color="black">)</font>;
+            csgl_screen_getDisplay<font color="black">(</font>index, <font color="blue">out</font> ss.Width, <font color="blue">out</font> ss.Height, <font color="blue">out</font> ss.CDepth<font color="black">)</font>;
+            <font color="blue">return</font> ss;
+        <font color="black">}</font>
+        
+        <font color="green">/// &#60;summary&#62; return current display &#60;/summary&#62;</font>
+        <font color="blue">public</font> <font color="blue">static</font> ScreenSetting CurrentDisplay
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font> <font color="blue">return</font> GetDisplay<font color="black">(</font><font color="maroon">-1</font><font color="black">)</font>; <font color="black">}</font>
+        <font color="black">}</font>
+        
+        <font color="black">[</font>DllImport<font color="black">(</font>CsGL.OSLib.CSGL, CallingConvention<font color="black">=</font>CallingConvention.Cdecl<font color="black">)</font><font color="black">]</font>
+        <font color="blue">static</font> <font color="blue">extern</font> <font color="blue">int</font> csgl_screen_isCompatibleDisplay<font color="black">(</font><font color="blue">int</font> index<font color="black">)</font>;
+        
+        <font color="green">/**
+         * return if the given display has the same bpp, frequency, 
+         * and other hidden stuff... than the current display
+         */</font>
+        <font color="blue">public</font> <font color="blue">static</font> <font color="blue">bool</font> IsCompatibleDisplay<font color="black">(</font><font color="blue">int</font> i<font color="black">)</font>
+        <font color="black">{</font>
+            <font color="blue">return</font> csgl_screen_isCompatibleDisplay<font color="black">(</font>i<font color="black">)</font> <font color="black">!</font><font color="black">=</font> <font color="maroon">0</font>;
+        <font color="black">}</font>
+        
+        <font color="blue">public</font> <font color="blue">static</font> ScreenSetting<font color="black">[</font><font color="black">]</font> CompatibleDisplay
+        <font color="black">{</font>
+            <font color="blue">get</font> <font color="black">{</font>
+                <font color="blue">int</font> i,n<font color="black">=</font>CountDisplay;
+                ArrayList al <font color="black">=</font> <font color="blue">new</font> ArrayList<font color="black">(</font><font color="black">)</font>;
+                <font color="blue">for</font><font color="black">(</font>i<font color="black">=</font><font color="maroon">0</font>; i<font color="black">&#60;</font>n; i<font color="black">+</font><font color="black">+</font><font color="black">)</font>
+                    <font color="blue">if</font><font color="black">(</font>IsCompatibleDisplay<font color="black">(</font>i<font color="black">)</font><font color="black">)</font>
+                        al.Add<font color="black">(</font>GetDisplay<font color="black">(</font>i<font color="black">)</font><font color="black">)</font>;
+                n <font color="black">=</font> al.Count;
+                ScreenSetting<font color="black">[</font><font color="black">]</font> ret <font color="black">=</font> <font color="blue">new</font> ScreenSetting<font color="black">[</font>n<font color="black">]</font>;
+                <font color="blue">for</font><font color="black">(</font>i<font color="black">=</font><font color="maroon">0</font>; i<font color="black">&#60;</font>n; i<font color="black">+</font><font color="black">+</font><font color="black">)</font>
+                    ret<font color="black">[</font>i<font color="black">]</font> <font color="black">=</font> <font color="black">(</font>ScreenSetting<font color="black">)</font> al<font color="black">[</font>i<font color="black">]</font>;
+                <font color="blue">return</font> ret;
+            <font color="black">}</font>
+        <font color="black">}</font>
+    <font color="black">}</font>
+<font color="black">}</font>
+
+</PRE>
+</BODY>
+</HTML>
