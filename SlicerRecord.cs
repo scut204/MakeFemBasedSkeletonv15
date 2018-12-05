@@ -56,6 +56,7 @@ namespace IsolineEditing
         public List<PointRecord> pointInfoList  = null;
         public List<Lineindex> lineList = null;
         public Vector3d slicerCenter;
+        public Vector3d skeletonNodepos;
         public Vector3d slicerNormal;
         public double radius = 0.0;
         public double perimeter = 0.0;
@@ -69,17 +70,13 @@ namespace IsolineEditing
             this.pointInfoList = new List<PointRecord>();
             this.lineList = new List<Lineindex>();
             Vector3d skeNodePos = pl.pt;
-           
+            skeletonNodepos = skeNodePos;
             List<Vector3d> plist = new List<Vector3d>();  
             List<HashSet<int>> psted = new List<HashSet<int>>();
             //List<int> llist = new List<int>();
             Dictionary<int,int> face2line = new Dictionary<int,int>();
-
-
             Vector3d[] jtp = new Vector3d[2];
-            HashSet<int>[] lineEndPoint = new HashSet<int>[2];   // 对mesh的顶点索引
-            lineEndPoint[0] = new HashSet<int>();
-            lineEndPoint[1] = new HashSet<int>();
+            HashSet<int>[] lineEndPoint = new HashSet<int>[2] {new HashSet<int>(), new HashSet<int>()};   // 对mesh的顶点索引
             int countLineIndex = 0;
             for (int i = 0; i < ms.FaceCount; i++)
             {
@@ -90,9 +87,10 @@ namespace IsolineEditing
                     plist.Add(jtp[1]);
                     psted.Add(lineEndPoint[0]);
                     psted.Add(lineEndPoint[1]);
-
                     //llist.Add(countLineIndex);
                     countLineIndex++;
+                    jtp = new Vector3d[2];
+                    lineEndPoint = new HashSet<int>[2] { new HashSet<int>(), new HashSet<int>() };
                 }
             }
 
@@ -236,9 +234,9 @@ namespace IsolineEditing
             lineEndPoint[0] = new HashSet<int>();
             lineEndPoint[1] = new HashSet<int>();
             int j  = 0 ;
-            Vector3d[] vp ={ new Vector3d(sh.VertexPos, sh.FaceIndex[faceid * 3])
-                            ,new Vector3d(sh.VertexPos, sh.FaceIndex[faceid * 3+1]  )
-                            ,new Vector3d(sh.VertexPos, sh.FaceIndex[faceid * 3+2]  )};
+            Vector3d[] vp ={ new Vector3d(sh.VertexPos, sh.FaceIndex[faceid * 3] * 3)
+                            ,new Vector3d(sh.VertexPos, sh.FaceIndex[faceid * 3+1] * 3 )
+                            ,new Vector3d(sh.VertexPos, sh.FaceIndex[faceid * 3+2] * 3 )};
             bool flag = false;
             for (int i = 0; i < 3; i++)
             {
@@ -248,7 +246,7 @@ namespace IsolineEditing
                 else if (temp1 * temp2 > 0) continue;
                 else
                 {
-                    jtp[j] = (vp[i] * Math.Abs(temp1) + vp[(i + 1) % 3] * Math.Abs(temp2)) / (Math.Abs(temp1) + Math.Abs(temp2));
+                    jtp[j] = (vp[i] * Math.Abs(temp2) + vp[(i + 1) % 3] * Math.Abs(temp1)) / (Math.Abs(temp1) + Math.Abs(temp2));
                     lineEndPoint[j].Add(sh.FaceIndex[faceid * 3 + i]);
                     lineEndPoint[j].Add(sh.FaceIndex[faceid * 3 +(i + 1) % 3] );
                     j++;

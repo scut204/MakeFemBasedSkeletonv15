@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using MyGeometry;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using CsGL.OpenGL;
 
 
@@ -107,7 +108,7 @@ namespace IsolineEditing
         public Segmentation(Skeletonizer skel, Mesh currmesh)
         {
             segMesh = currmesh;
-            int numSkSeq = 40; // 骨架的分段数量
+            int numSkSeq = 80; // 骨架的分段数量
             if (skel != null)
             {
                 skeRcd = skel.ReturnSkeleton(); // get skeleton from sig08
@@ -119,6 +120,7 @@ namespace IsolineEditing
 
         public void SegPostProcess()
         {
+            DebugMethod.slicerAll = new List<List<SlicerRecord>>();
             bodypart[] bdparr = (bodypart[])Enum.GetValues(typeof(bodypart));
             for (int i = 0; i < (int)bodypart.PartCount; i++)
             {
@@ -126,8 +128,9 @@ namespace IsolineEditing
                 List<SlicerRecord> slicerSeq;
                 bodypart bdt = bdparr[i];
                 CreateSlicerSequence(bdt, interval, out slicerSeq);
-                // debug 
                 List<SlicerRecordUniform> radialSlicer = RadialSlicerCut(slicerSeq, n);
+                // display
+                DebugMethod.slicerAll.Add(slicerSeq);
                 WriteToSlicFile(radialSlicer, bdt);
             } 
         }
@@ -157,7 +160,7 @@ namespace IsolineEditing
         }
         private void SkeletonRefining(double interval)
         {
-            SkeletonDensify(interval/6);    // 尽量紧密一点
+            SkeletonDensify(interval/5);    // 尽量紧密一点
             SkeletonSmoothing(4);
         }
         private void SkeletonSmoothing(int times)
@@ -299,20 +302,35 @@ namespace IsolineEditing
         {
             if (this.displaySlicer == null) return;
             DisplaySlicer(displaySlicer);
+
+        }
+        private void DisplaySlicer()
+        {
+
         }
         private void DisplaySlicer(SlicerRecord sli)
         {
             float skeletonNodeSize = 6.0f;
             float[] newcolor = ColorHelper.byte2float(Color.Gold);
+
             // draw center 
             GL.glPointSize(skeletonNodeSize);
             GL.glColor3f(newcolor[0], newcolor[1], newcolor[2]);
             GL.glBegin(GL.GL_POINTS);
-            GL.glVertex3d(sli.slicerCenter.x, sli.slicerCenter.y,sli.slicerCenter.z);
+            GL.glVertex3d(sli.slicerCenter.x, sli.slicerCenter.y, sli.slicerCenter.z);
             GL.glEnd();
-            newcolor = ColorHelper.byte2float(Color.Orange);
+            newcolor = ColorHelper.byte2float(Color.Black);
+
+            // mark skeleton node
+            GL.glPointSize(skeletonNodeSize + 3);
+            GL.glColor3f(newcolor[0], newcolor[1], newcolor[2]);
+            GL.glBegin(GL.GL_POINTS);
+            GL.glVertex3d(sli.skeletonNodepos.x, sli.skeletonNodepos.y, sli.skeletonNodepos.z);
+            GL.glEnd();
+
             // draw points
-            for(int i = 0; i < sli.pointInfoList.Count;i++)
+            newcolor = ColorHelper.byte2float(Color.Orange);
+            for (int i = 0; i < sli.pointInfoList.Count; i++)
             {
                 GL.glPointSize(skeletonNodeSize);
                 GL.glColor3f(newcolor[0], newcolor[1], newcolor[2]);
@@ -320,18 +338,42 @@ namespace IsolineEditing
                 GL.glVertex3d(sli.pointInfoList[i].p.x, sli.pointInfoList[i].p.y, sli.pointInfoList[i].p.z);
                 GL.glEnd();
             }
-            newcolor = ColorHelper.byte2float(Color.Pink);
-            GL.glColor3f(newcolor[0], newcolor[1], newcolor[2]);
-            GL.glLineWidth(2.0f);
-            GL.glBegin(GL.GL_LINES);
+
+            // draw lines and mark mesh triangles
+            newcolor = ColorHelper.byte2float(Color.Orange);
+            float[] facemark = ColorHelper.byte2float(Color.Pink);
             for (int i = 0; i < sli.lineList.Count; i++)
             {
+                GL.glColor3f(newcolor[0], newcolor[1], newcolor[2]);
+                GL.glLineWidth(2.0f);
+                GL.glBegin(GL.GL_LINES);
                 int p1 = sli.lineList[i].p1;
                 int p2 = sli.lineList[i].p2;
                 GL.glVertex3d(sli.pointInfoList[p1].p.x, sli.pointInfoList[p1].p.y, sli.pointInfoList[p1].p.z);
                 GL.glVertex3d(sli.pointInfoList[p2].p.x, sli.pointInfoList[p2].p.y, sli.pointInfoList[p2].p.z);
+                GL.glEnd();
             }
-            GL.glEnd();
+            //unsafe
+            //{
+            //    fixed (double* np = segMesh.FaceNormal)
+            //    fixed (double* vp = segMesh.VertexPos)
+            //    {
+            //        for (int i = 0; i < sli.lineList.Count; i++)
+            //        {
+            //            int fi = sli.lineList[i].fid;
+            //            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL);
+            //            GL.glColor3f(facemark[0], facemark[1], facemark[2]);
+            //            GL.glEnableClientState(GL.GL_VERTEX_ARRAY);
+            //            GL.glNormal3dv(np + fi);
+            //            GL.glVertex3dv(vp + segMesh.FaceIndex[fi] * 3);
+            //            GL.glVertex3dv(vp + segMesh.FaceIndex[fi + 1] * 3);
+            //            GL.glVertex3dv(vp + segMesh.FaceIndex[fi + 2] * 3);
+            //            GL.glEnd();
+            //        }
+            //    }
+            //}
+
+
         }
         private bool Checkchest(List<Set<int>> updateAdjVV)
         {
@@ -472,20 +514,22 @@ namespace IsolineEditing
             nodePlane = new Plane(skeRcd.nodePosList[skeletonSeq[0]], nodeNV);
             slicerSeq.Add(new SlicerRecord(segMesh, nodePlane));
             globalPos += interval;
+            skeLineAddup = (skeRcd.nodePosList[skeletonSeq[1]] - skeRcd.nodePosList[skeletonSeq[0]]).Length();
             // medial points
             while (globalPos < pSkeLen)  // 总的不超过整个seq
             {
                 int currStartIndex = skeletonSeq[skeLineIndex];
                 int currEndIndex = skeletonSeq[skeLineIndex + 1];
                 double currLineLen = (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]).Length();
-                for (; skeLineAddup < globalPos; skeLineIndex++)
+                for (; skeLineAddup < globalPos; )
                 {
+                    skeLineIndex++;
                     currStartIndex = skeletonSeq[skeLineIndex];
                     currEndIndex = skeletonSeq[skeLineIndex + 1];
-                    currLineLen = (skeRcd.nodePosList[skeLineIndex + 1] - skeRcd.nodePosList[skeLineIndex]).Length();
+                    currLineLen = (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]).Length();
                     skeLineAddup += currLineLen;
                 }// 循环停止的结果：skeLineAddup>=globalPos skeLineIndex指向超过globalpos的那个线段
-                nodepos = (skeLineAddup - globalPos) / currLineLen *
+                nodepos = (1-(skeLineAddup - globalPos) / currLineLen )*
                           (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]) +
                           skeRcd.nodePosList[currStartIndex];
                 nodeNV = skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex];
@@ -495,10 +539,10 @@ namespace IsolineEditing
             }
             //end point 
             nodeNV = skeRcd.nodePosList[skeletonSeq.Count-1] - skeRcd.nodePosList[skeletonSeq.Count-2];
-            nodePlane = new Plane(skeRcd.nodePosList[skeletonSeq[skeletonSeq.Count - 1]], nodeNV);
+            nodePlane = new Plane(skeRcd.nodePosList[skeletonSeq.Last()], nodeNV);
             slicerSeq.Add(new SlicerRecord(segMesh, nodePlane));
 
-            //SlicerSeqPruning(ref slicerSeq, bdt);
+            SlicerSeqPruning(ref slicerSeq, bdt);
 
         }
         /// <summary>

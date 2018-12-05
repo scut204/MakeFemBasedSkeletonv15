@@ -651,6 +651,7 @@ namespace IsolineEditing
                 }
                 this.simplifiedVertexRec.Add(new VertexRecord(pos, vIndex, adj));
             }
+            vRec = simplifiedVertexRec.ToArray();
         }
 
 		public void WriteSegmentation(StreamWriter sw)

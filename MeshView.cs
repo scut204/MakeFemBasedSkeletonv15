@@ -504,6 +504,11 @@ namespace IsolineEditing
 				if (Program.displayProperty.DisplaySelectedVertices)
 					DrawSelectedVertice_ByPoint();
 
+                // debug display
+                DebugMethod.DisplayVertexArray();
+                DebugMethod.DisplaySlicerArray();
+                DebugMethod.DisplaySlicerUniformArray();
+
 			}
 
 
