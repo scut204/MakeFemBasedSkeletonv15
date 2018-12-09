@@ -71,7 +71,7 @@ namespace IsolineEditing
         // for skemoving
         private Vector4d skeHandleCenter = new Vector4d();
         private Vector3d skeHandlepos = new Vector3d();
-        private int skeHandleIndex = -1;
+        public int skeHandleIndex = -1;
         // testing
 		private bool initFont = false;
 		public UInt32 fontBase = 0;

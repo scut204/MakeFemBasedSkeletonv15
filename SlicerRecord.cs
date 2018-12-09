@@ -309,7 +309,7 @@ namespace IsolineEditing
     {
         public new List<Vector3d> pointInfoList = null;
         public int numRadialPoint;
-        
+        public int lable;
         public SlicerRecordUniform(List<Vector3d> pointList, Vector3d center)
         {
             this.pointInfoList = pointList;

@@ -186,7 +186,15 @@ namespace MyGeometry
 		{
 			return this / this.Length();
 		}
-		public Matrix3d OuterCross(Vector3d v)
+        public static Vector3d RotationRodriguesMethod(Vector3d spinAxis, Vector3d v,double cost)
+        {
+            //double cost = Math.Cos(angle);
+            double sint = Math.Pow(1-cost * cost,0.5);
+            return v * cost + spinAxis.Cross(v) * sint + spinAxis * spinAxis.Dot(v) * (1 - cost);
+            
+        }
+
+        public Matrix3d OuterCross(Vector3d v)
 		{
 			Matrix3d m = new Matrix3d();
 			m[0, 0] = x * v.x;

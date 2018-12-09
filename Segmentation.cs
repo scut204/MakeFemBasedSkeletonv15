@@ -120,7 +120,7 @@ namespace IsolineEditing
 
         public void SegPostProcess()
         {
-            DebugMethod.slicerAll = new List<List<SlicerRecord>>();
+            DebugMethod.slicerUniformAll = new List<List<SlicerRecordUniform>>();
             bodypart[] bdparr = (bodypart[])Enum.GetValues(typeof(bodypart));
             for (int i = 0; i < (int)bodypart.PartCount; i++)
             {
@@ -130,9 +130,14 @@ namespace IsolineEditing
                 CreateSlicerSequence(bdt, interval, out slicerSeq);
                 List<SlicerRecordUniform> radialSlicer = RadialSlicerCut(slicerSeq, n);
                 // display
-                DebugMethod.slicerAll.Add(slicerSeq);
+                foreach(SlicerRecordUniform sru in radialSlicer)
+                {
+                    sru.lable = i;
+                } 
+                DebugMethod.slicerUniformAll.Add(radialSlicer);
+                
                 WriteToSlicFile(radialSlicer, bdt);
-            } 
+            }
         }
         //TODO:test unit
         private void SegmentToPart()
@@ -161,7 +166,7 @@ namespace IsolineEditing
         private void SkeletonRefining(double interval)
         {
             SkeletonDensify(interval/5);    // 尽量紧密一点
-            SkeletonSmoothing(4);
+            SkeletonSmoothing(20);
         }
         private void SkeletonSmoothing(int times)
         {
@@ -650,17 +655,21 @@ namespace IsolineEditing
                 Vector3d slicernv = s[i].slicerNormal;
                 for(int k = 0 ;k < n;k++)
                 {
-                    Vector3d radialRay = new Vector3d(Math.Cos(phi[k]), 0, Math.Sin(phi[k])) ; 
-                    Plane halfCutPlane = new Plane(plcen,slicernv.Cross(radialRay));
-                    int dir = slicernv.Dot(new Vector3d(0, 1, 0)) > 0 ? 1 : -1;
+                    Vector3d radialRay = new Vector3d(Math.Sin(phi[k]), 0, Math.Cos(phi[k])) ;
+                    Vector3d radialSpinAx = new Vector3d(0, 1, 0);
+                    double cost = radialSpinAx.Dot(slicernv);
+                    Vector3d newRay = Vector3d.RotationRodriguesMethod(radialSpinAx.Cross(slicernv), radialRay, cost);
+                    Plane halfCutPlane = new Plane(plcen,slicernv.Cross(newRay));
+                    //int dir = slicernv.Dot(new Vector3d(0, 1, 0)) > 0 ? 1 : -1;
                     for (int j = 0; j < tempSR.lineList.Count; j++)
                     {
                         Vector3d p1 = tempSR.pointInfoList[tempSR.lineList[j].p1].p;
                         Vector3d p2 = tempSR.pointInfoList[tempSR.lineList[j].p2].p;
                         double tempP1Planedist = PointPlaneDistance(p1, halfCutPlane);
                         double tempP2Planedist = PointPlaneDistance(p2, halfCutPlane);
-                        Vector3d outP = (p1 * tempP1Planedist + p2 * tempP2Planedist) / (tempP1Planedist + tempP2Planedist);
-                        if ((outP - plcen).Dot(radialRay) * dir > 0)
+                        if (tempP2Planedist * tempP1Planedist > 0) continue;
+                        Vector3d outP = (p1 * Math.Abs(tempP2Planedist) + p2 * Math.Abs(tempP1Planedist)) / (Math.Abs(tempP1Planedist) + Math.Abs(tempP2Planedist));
+                        if ((outP - plcen).Dot(newRay) > 0)
                         {
                             tempnp.Add(outP);
                             break;   // test dir！

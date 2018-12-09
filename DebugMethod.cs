@@ -13,7 +13,14 @@ namespace IsolineEditing
     /// </summary>
     public static class DebugMethod
     {
-        public static List<Vector3d> ps;
+        public static Color[] dbColor = new Color[6]{
+                             Color.BlanchedAlmond,
+                             Color.Brown,
+                             Color.DarkGreen,
+                             Color.Gray,
+                             Color.LightPink,
+                             Color.Red };
+    public static List<Vector3d> ps;
         public static List<List<SlicerRecord>> slicerAll;
         public static List<List<SlicerRecordUniform>> slicerUniformAll;
         public static string ToReadableString(byte[] data)
@@ -134,6 +141,7 @@ namespace IsolineEditing
         }
         private static void DisplaySlicer(SlicerRecordUniform sli)
         {
+            int bd = sli.lable;   
             float skeletonNodeSize = 6.0f;
             float[] newcolor = ColorHelper.byte2float(Color.Gold);
 
@@ -146,7 +154,7 @@ namespace IsolineEditing
             newcolor = ColorHelper.byte2float(Color.Black);
 
             // draw points
-            newcolor = ColorHelper.byte2float(Color.Orange);
+            newcolor = ColorHelper.byte2float(dbColor[bd]);
             for (int i = 0; i < sli.pointInfoList.Count; i++)
             {
                 GL.glPointSize(skeletonNodeSize);
@@ -157,15 +165,17 @@ namespace IsolineEditing
             }
 
             // draw lines and mark mesh triangles
-            newcolor = ColorHelper.byte2float(Color.Orange);
+            newcolor = ColorHelper.byte2float(dbColor[bd]);
             float[] facemark = ColorHelper.byte2float(Color.Pink);
-            for (int i = 0; i < sli.numRadialPoint-1; i++)
+            for (int i = 0; i < sli.numRadialPoint; i++)
             {
                 GL.glColor3f(newcolor[0], newcolor[1], newcolor[2]);
                 GL.glLineWidth(2.0f);
                 GL.glBegin(GL.GL_LINES);
                 GL.glVertex3d(sli.pointInfoList[i].x, sli.pointInfoList[i].y, sli.pointInfoList[i].z);
-                GL.glVertex3d(sli.pointInfoList[i+1].x, sli.pointInfoList[i+1].y, sli.pointInfoList[i+1].z);
+                GL.glVertex3d(sli.pointInfoList[(i + 1) % (sli.numRadialPoint)].x,
+                              sli.pointInfoList[(i + 1) % (sli.numRadialPoint)].y, 
+                              sli.pointInfoList[(i + 1) % (sli.numRadialPoint)].z);
                 GL.glEnd();
             }
         }

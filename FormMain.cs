@@ -447,6 +447,7 @@ namespace IsolineEditing
                 sr.Close();
                 Program.displayProperty.MeshDisplayMode = DisplayProperty.EnumMeshDisplayMode.TransparentSmoothShaded;
                 this.meshView1.Refresh();
+                this.meshView1.skeHandleIndex = 1;
                 PrintText("Read skeleton " + openFileDialog1.FileName + "\n");
             }
         }
