@@ -147,9 +147,20 @@ namespace MyGeometry
 			y = arr[index+1];
 			z = arr[index+2];
 		}
+        public static bool operator ==(Vector3d v1,Vector3d v2)
+        {
+            return v1.x != v2.x ? false :
+                   v1.y != v2.y ? false :
+                   v1.z != v2.z ? false : true;
+        }
+        public static bool operator !=(Vector3d v1, Vector3d v2)
+        {
+            return v1.x != v2.x ? true :
+                   v1.y != v2.y ? true :
+                   v1.z != v2.z ? true : false;
+        }
 
-
-		public double this[int index] 
+        public double this[int index] 
 		{
 			get 
 			{

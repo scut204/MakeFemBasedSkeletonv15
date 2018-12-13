@@ -93,8 +93,9 @@
     <Compile Include="AboutBox1.Designer.cs">
       <DependentUpon>AboutBox1.cs</DependentUpon>
     </Compile>
-    <Compile Include="DebugMethod.cs" />
+    <Compile Include="MyExperiment\DebugMethod.cs" />
     <Compile Include="MyDataType\Color.cs" />
+    <Compile Include="MyExperiment\TrickForSegment.cs" />
     <Compile Include="Segmentation.cs" />
     <Compile Include="SlicerRecord.cs" />
     <Compile Include="FormInput.cs">

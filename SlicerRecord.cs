@@ -295,12 +295,7 @@ namespace IsolineEditing
                 pm += (pointInfoList[lineList[i].p1].p - pointInfoList[lineList[i].p2].p).Length();
             }
             return pm;
-        }
-        public void DisplaySlicers()
-        {
-
-        } // not implemented;
-        
+        }        
     }
     /// <summary>
     /// 最终结果打印用
@@ -316,7 +311,10 @@ namespace IsolineEditing
             this.numRadialPoint = pointList.Count;
             this.slicerCenter = center;
         }
+        public Vector3d SlicerUniformNormal()
+        {
+            return (pointInfoList[0] - slicerCenter).Cross(pointInfoList[1] - slicerCenter);
+        }
         
     }
-
 }

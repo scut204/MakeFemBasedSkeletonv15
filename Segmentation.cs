@@ -121,21 +121,20 @@ namespace IsolineEditing
         public void SegPostProcess()
         {
             DebugMethod.slicerUniformAll = new List<List<SlicerRecordUniform>>();
+            DebugMethod.slicerAll = new List<List<SlicerRecord>>();
             bodypart[] bdparr = (bodypart[])Enum.GetValues(typeof(bodypart));
             for (int i = 0; i < (int)bodypart.PartCount; i++)
             {
-                int n = (int)bodypart.Torso == i ? 15 : 5;
+                int n = (int)bodypart.Torso == i ? 40 : 10;
                 List<SlicerRecord> slicerSeq;
                 bodypart bdt = bdparr[i];
                 CreateSlicerSequence(bdt, interval, out slicerSeq);
                 List<SlicerRecordUniform> radialSlicer = RadialSlicerCut(slicerSeq, n);
+                TrickForSegment.PostEliminateChestGap(radialSlicer, bdparr[i]);
                 // display
-                foreach(SlicerRecordUniform sru in radialSlicer)
-                {
-                    sru.lable = i;
-                } 
+                foreach (SlicerRecordUniform sru in radialSlicer) sru.lable = i;
                 DebugMethod.slicerUniformAll.Add(radialSlicer);
-                
+                //DebugMethod.slicerAll.Add(slicerSeq);
                 WriteToSlicFile(radialSlicer, bdt);
             }
         }
@@ -161,7 +160,6 @@ namespace IsolineEditing
             DFSFindLimb(skeRcd, chest4v, sflag, out partSkelSeq[(int)bodypart.Arm_1]);
             DFSFindLimb(skeRcd, navel3v, sflag, out partSkelSeq[(int)bodypart.Leg_0]);
             DFSFindLimb(skeRcd, navel3v, sflag, out partSkelSeq[(int)bodypart.Leg_1]);
-            bodypart[] bdt = (bodypart[])Enum.GetValues(typeof(bodypart));
         }
         private void SkeletonRefining(double interval)
         {
@@ -307,10 +305,6 @@ namespace IsolineEditing
         {
             if (this.displaySlicer == null) return;
             DisplaySlicer(displaySlicer);
-
-        }
-        private void DisplaySlicer()
-        {
 
         }
         private void DisplaySlicer(SlicerRecord sli)
@@ -505,7 +499,7 @@ namespace IsolineEditing
             {
                 pSkeLen += (skeRcd.nodePosList[skeletonSeq[i + 1]] - skeRcd.nodePosList[skeletonSeq[i]]).Length();
             }
-            
+            interval = pSkeLen / (Math.Floor(pSkeLen / interval)) + interval / 200;
             #endregion 
             slicerSeq = new List<SlicerRecord>();
             Vector3d nodeNV ;
@@ -521,12 +515,13 @@ namespace IsolineEditing
             globalPos += interval;
             skeLineAddup = (skeRcd.nodePosList[skeletonSeq[1]] - skeRcd.nodePosList[skeletonSeq[0]]).Length();
             // medial points
-            while (globalPos < pSkeLen)  // 总的不超过整个seq
+            // 总的不超过整个seq
+            do
             {
                 int currStartIndex = skeletonSeq[skeLineIndex];
                 int currEndIndex = skeletonSeq[skeLineIndex + 1];
                 double currLineLen = (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]).Length();
-                for (; skeLineAddup < globalPos; )
+                for (; skeLineAddup < globalPos;)
                 {
                     skeLineIndex++;
                     currStartIndex = skeletonSeq[skeLineIndex];
@@ -534,21 +529,28 @@ namespace IsolineEditing
                     currLineLen = (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]).Length();
                     skeLineAddup += currLineLen;
                 }// 循环停止的结果：skeLineAddup>=globalPos skeLineIndex指向超过globalpos的那个线段
-                nodepos = (1-(skeLineAddup - globalPos) / currLineLen )*
+                nodepos = (1 - (skeLineAddup - globalPos) / currLineLen) *
                           (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]) +
                           skeRcd.nodePosList[currStartIndex];
                 nodeNV = skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex];
                 nodePlane = new Plane(nodepos, nodeNV);
                 slicerSeq.Add(new SlicerRecord(segMesh, nodePlane));
-                globalPos += interval; 
-            }
-            //end point 
-            nodeNV = skeRcd.nodePosList[skeletonSeq.Count-1] - skeRcd.nodePosList[skeletonSeq.Count-2];
+                globalPos += interval;
+            } while (globalPos  < pSkeLen);
+                //end point 
+            nodeNV = skeRcd.nodePosList[skeletonSeq[skeletonSeq.Count-1]] - skeRcd.nodePosList[skeletonSeq[skeletonSeq.Count-2]];
             nodePlane = new Plane(skeRcd.nodePosList[skeletonSeq.Last()], nodeNV);
             slicerSeq.Add(new SlicerRecord(segMesh, nodePlane));
-
+            if (bdt == bodypart.Torso)
+            {
+                int ct;
+                TorsoSeqPrune(slicerSeq,out ct);
+                TrickForSegment.chest = new Plane(slicerSeq[ct].skeletonNodepos, slicerSeq[ct].slicerNormal);
+                TrickForSegment.navel = new Plane(slicerSeq.Last().skeletonNodepos, slicerSeq.Last().slicerNormal);
+                return;
+            }
+            if (bdt == bodypart.Head) return;
             SlicerSeqPruning(ref slicerSeq, bdt);
-
         }
         /// <summary>
         /// 与 createsequence函数搭配使用，因此在s上不需要进行分割
@@ -560,7 +562,7 @@ namespace IsolineEditing
             switch (bdt)
             {
                 case bodypart.Head : HeadSeqPrune(ref s); break;
-                case bodypart.Torso: TorsoSeqPrune(ref s); break;
+                //case bodypart.Torso: TorsoSeqPrune(ref s); break;
                 case bodypart.Arm_0: ArmSeqPrune(ref s); break;
                 case bodypart.Arm_1: ArmSeqPrune(ref s); break;
                 case bodypart.Leg_0: LegSeqPrune(ref s); break;
@@ -573,9 +575,9 @@ namespace IsolineEditing
                                      out List<SlicerRecordUniform> sd)
         {
             int nump = s.Count;
-
-            su = s.GetRange(0, nump / 2);
-            sd = s.GetRange(nump / 2-1, nump / 2);
+            int mid = (int)Math.Ceiling((double)nump / 2);
+            su = s.GetRange(0, mid);
+            sd = s.GetRange(mid - 1, nump - mid + 1);
         }
         private void LegSeqPrune(ref List<SlicerRecord> s)
         {  // 暂时用增幅来判断，感觉有BUG
@@ -619,12 +621,13 @@ namespace IsolineEditing
             
         }
 
-        private void TorsoSeqPrune(ref List<SlicerRecord> s)
+        private void TorsoSeqPrune(List<SlicerRecord> s, out int outstart)
         {
             int start;
-            int outstart;
+            //int outstart;
             DiffPrune(s, out start, out outstart);
-            s.RemoveRange(start, outstart);
+            outstart = outstart - 1;
+            //s.RemoveRange(start, outstart);
         }
 
         private void HeadSeqPrune(ref List<SlicerRecord> s)
@@ -655,6 +658,8 @@ namespace IsolineEditing
                 Vector3d slicernv = s[i].slicerNormal;
                 for(int k = 0 ;k < n;k++)
                 {
+                    double maxDist = double.MinValue;
+                    Vector3d maxOutP = new Vector3d();
                     Vector3d radialRay = new Vector3d(Math.Sin(phi[k]), 0, Math.Cos(phi[k])) ;
                     Vector3d radialSpinAx = new Vector3d(0, 1, 0);
                     double cost = radialSpinAx.Dot(slicernv);
@@ -669,12 +674,15 @@ namespace IsolineEditing
                         double tempP2Planedist = PointPlaneDistance(p2, halfCutPlane);
                         if (tempP2Planedist * tempP1Planedist > 0) continue;
                         Vector3d outP = (p1 * Math.Abs(tempP2Planedist) + p2 * Math.Abs(tempP1Planedist)) / (Math.Abs(tempP1Planedist) + Math.Abs(tempP2Planedist));
-                        if ((outP - plcen).Dot(newRay) > 0)
+                        if ((outP - plcen).Dot(newRay) < 0) continue;
+                        if ((outP - plcen).Length() > maxDist)
                         {
-                            tempnp.Add(outP);
-                            break;   // test dir！
+                            maxDist = (outP - plcen).Length();
+                            maxOutP = outP;
                         }
                     }
+                    if(maxOutP != (Vector3d) new Vector3d())
+                        tempnp.Add(maxOutP);
                 }
                 ret.Add(new SlicerRecordUniform(tempnp, plcen));
             }
@@ -692,8 +700,8 @@ namespace IsolineEditing
             {
                 case bodypart.Arm_0: 
                 {
-                        List<SlicerRecordUniform> osl1;
-                        List<SlicerRecordUniform> osl2;
+                    List<SlicerRecordUniform> osl1;
+                    List<SlicerRecordUniform> osl2;
                     LimbMidDivision(osl,out osl1,out osl2);
                     WriteToSlicFile_single(osl1, currPath + "LeftupperArm.txt");
                     WriteToSlicFile_single(osl2, currPath + "LeftlowerArm.txt");
@@ -722,8 +730,8 @@ namespace IsolineEditing
                     List<SlicerRecordUniform> osl1;
                     List<SlicerRecordUniform> osl2;
                     LimbMidDivision(osl, out osl1, out osl2);
-                    WriteToSlicFile_single(osl1, currPath + "RightupperArm.txt");
-                    WriteToSlicFile_single(osl2, currPath + "RightlowerArm.txt");
+                    WriteToSlicFile_single(osl1, currPath + "RightupperLeg.txt");
+                    WriteToSlicFile_single(osl2, currPath + "RightlowerLeg.txt");
                     break;
                 }
                 case bodypart.Head:
