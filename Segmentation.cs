@@ -94,7 +94,7 @@ namespace IsolineEditing
              return ret;
          }
      }
-    
+
     public class Segmentation
     {
         public enum bodypart { Head, Torso, Arm_0, Arm_1, Leg_0, Leg_1, PartCount };
@@ -112,7 +112,7 @@ namespace IsolineEditing
             if (skel != null)
             {
                 skeRcd = skel.ReturnSkeleton(); // get skeleton from sig08
-                interval = (double)skeRcd.skeLength/numSkSeq;
+                interval = (double)skeRcd.skeLength / numSkSeq;
                 SkeletonRefining(interval);   // refine
                 SegmentToPart();      //get partskelseq
             }
@@ -123,20 +123,60 @@ namespace IsolineEditing
             DebugMethod.slicerUniformAll = new List<List<SlicerRecordUniform>>();
             DebugMethod.slicerAll = new List<List<SlicerRecord>>();
             bodypart[] bdparr = (bodypart[])Enum.GetValues(typeof(bodypart));
+            List<SlicerRecord>[] bodySlicerGroup = new List<SlicerRecord>[(int)bodypart.PartCount];
             for (int i = 0; i < (int)bodypart.PartCount; i++)
             {
-                int n = (int)bodypart.Torso == i ? 40 : 10;
                 List<SlicerRecord> slicerSeq;
                 bodypart bdt = bdparr[i];
                 CreateSlicerSequence(bdt, interval, out slicerSeq);
+                bodySlicerGroup[i] = slicerSeq;
+            }
+            AddtionCreateSlicer(bodySlicerGroup);
+            for (int i = 0; i < (int)bodypart.PartCount; i++)
+            {
+                List<SlicerRecord> slicerSeq = bodySlicerGroup[i];
+                int n = (int)bodypart.Torso == i ? 40 : 10;
+                bodypart bdt = bdparr[i];
                 List<SlicerRecordUniform> radialSlicer = RadialSlicerCut(slicerSeq, n);
-                TrickForSegment.PostEliminateChestGap(radialSlicer, bdparr[i]);
+                // TrickForSegment.PostEliminateChestGap(radialSlicer, bdparr[i]);
                 // display
                 foreach (SlicerRecordUniform sru in radialSlicer) sru.lable = i;
                 DebugMethod.slicerUniformAll.Add(radialSlicer);
                 //DebugMethod.slicerAll.Add(slicerSeq);
                 WriteToSlicFile(radialSlicer, bdt);
             }
+        }
+        private void AddtionCreateSlicer(List<SlicerRecord>[] bodySlicerGroup)
+        {
+            SlicerRecord bottomTorso = bodySlicerGroup[(int)bodypart.Torso].Last();
+            SlicerRecord leg0top = bodySlicerGroup[(int)bodypart.Leg_0].First();
+            SlicerRecord leg1top = bodySlicerGroup[(int)bodypart.Leg_1].First();
+            TrickForSegment.BuildSeperateLimbSlicer(leg0top, leg1top, out SlicerRecord nLeg0, out SlicerRecord nLeg1);
+            bodySlicerGroup[(int)bodypart.Leg_0][0] = nLeg0;
+            bodySlicerGroup[(int)bodypart.Leg_1][0] = nLeg1;
+            // add torso slicer
+            TrickForSegment.BuildCombinedTorsoSlicer(leg0top, leg1top, out SlicerRecord torsoRoot);
+            List<SlicerRecord> Torsoseq = new List<SlicerRecord>();
+            Vector3d rootCentre = torsoRoot.slicerCenter;
+            int currLoopTimes = (int)(Math.Floor((rootCentre - bottomTorso.slicerCenter).Length() / interval));
+            double currInterval = (rootCentre - bottomTorso.slicerCenter).Length() / currLoopTimes;
+            for(int i = 1; i < currLoopTimes; i++)
+            {
+                Vector3d refSkeNode = rootCentre + ((double)i / currLoopTimes) * (bottomTorso.slicerCenter - rootCentre);
+                Vector3d refNodeNormal0 = ((double)i / currLoopTimes) * bottomTorso.slicerNormal +
+                                         (1-(double)i / currLoopTimes) * leg0top.slicerNormal;
+                Vector3d refNodeNormal1 = ((double)i / currLoopTimes) * bottomTorso.slicerNormal +
+                                         (1-(double)i / currLoopTimes) * leg1top.slicerNormal;
+                Plane nodePlane0 = new Plane(refSkeNode, refNodeNormal0);
+                Plane nodePlane1 = new Plane(refSkeNode, refNodeNormal1);
+                SlicerRecord t0 = new SlicerRecord(segMesh, nodePlane1);
+                SlicerRecord t1 = new SlicerRecord(segMesh, nodePlane0);
+                TrickForSegment.BuildCombinedTorsoSlicer(t0, t1, out SlicerRecord torsoIntp);
+                Torsoseq.Add(torsoIntp);
+            }
+            Torsoseq.Reverse();
+            Torsoseq.Add(torsoRoot);
+            bodySlicerGroup[(int)bodypart.Torso].AddRange(Torsoseq);
         }
         //TODO:test unit
         private void SegmentToPart()
@@ -541,15 +581,6 @@ namespace IsolineEditing
             nodeNV = skeRcd.nodePosList[skeletonSeq[skeletonSeq.Count-1]] - skeRcd.nodePosList[skeletonSeq[skeletonSeq.Count-2]];
             nodePlane = new Plane(skeRcd.nodePosList[skeletonSeq.Last()], nodeNV);
             slicerSeq.Add(new SlicerRecord(segMesh, nodePlane));
-            if (bdt == bodypart.Torso)
-            {
-                int ct;
-                TorsoSeqPrune(slicerSeq,out ct);
-                TrickForSegment.chest = new Plane(slicerSeq[ct].skeletonNodepos, slicerSeq[ct].slicerNormal);
-                TrickForSegment.navel = new Plane(slicerSeq.Last().skeletonNodepos, slicerSeq.Last().slicerNormal);
-                return;
-            }
-            if (bdt == bodypart.Head) return;
             SlicerSeqPruning(ref slicerSeq, bdt);
         }
         /// <summary>
@@ -561,8 +592,15 @@ namespace IsolineEditing
         {
             switch (bdt)
             {
-                case bodypart.Head : HeadSeqPrune(ref s); break;
-                //case bodypart.Torso: TorsoSeqPrune(ref s); break;
+                case bodypart.Head :/* HeadSeqPrune(ref s);*/ break;
+                case bodypart.Torso:
+                    {
+                        int ct;
+                        TorsoSeqPrune(s, out ct);
+                        TrickForSegment.chest = new Plane(s[ct].skeletonNodepos, s[ct].slicerNormal);
+                        TrickForSegment.navel = new Plane(s.Last().skeletonNodepos, s.Last().slicerNormal);
+                        break;
+                    }
                 case bodypart.Arm_0: ArmSeqPrune(ref s); break;
                 case bodypart.Arm_1: ArmSeqPrune(ref s); break;
                 case bodypart.Leg_0: LegSeqPrune(ref s); break;
@@ -584,7 +622,7 @@ namespace IsolineEditing
             int start;
             int outstart;
             DiffPrune(s, out start, out outstart);
-            s.RemoveRange(start, outstart);
+            s.RemoveRange(start, outstart-1);
         }
         // 从胸口开始
         private void ArmSeqPrune(ref List<SlicerRecord> s)
@@ -780,9 +818,5 @@ namespace IsolineEditing
         {
             
         }
-        
     }
-    
-
-    
 }

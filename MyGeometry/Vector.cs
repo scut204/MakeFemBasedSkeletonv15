@@ -243,6 +243,10 @@ namespace MyGeometry
 		{
 			return new Vector3d(v1.x+v2.x, v1.y+v2.y, v1.z+v2.z);
 		}
+        static public Vector3d operator- (Vector3d v1)
+        {
+            return new Vector3d(-v1.x, -v1.y, -v1.z);
+        }
 		static public Vector3d operator- (Vector3d v1, Vector3d v2)
 		{
 			return new Vector3d(v1.x-v2.x, v1.y-v2.y, v1.z-v2.z);

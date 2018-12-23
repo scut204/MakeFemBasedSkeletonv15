@@ -40,6 +40,13 @@ namespace IsolineEditing
             {
                 adjFF.Add(fi);
             }
+            public int GetAdjFaceIndex(int fi)
+            {
+                adjFF.Remove(fi);
+                int ret = adjFF.ToArray()[0];
+                adjFF.Add(fi);
+                return ret;
+            }
         }  
         public struct Lineindex
         {
@@ -60,6 +67,18 @@ namespace IsolineEditing
         public Vector3d slicerNormal;
         public double radius = 0.0;
         public double perimeter = 0.0;
+        public SlicerRecord(HalfSlicerRecord s1)
+        {
+            this.pointInfoList = s1.pointInfoList;
+            this.lineList = s1.lineList;
+            this.lineList.Add(new Lineindex());
+            this.lineList = RebuildLineList();
+            for(int i = 0; i < pointInfoList.Count; i++)
+            {
+                this.slicerCenter += pointInfoList[i].p / pointInfoList.Count;
+            }
+            this.slicerNormal = s1.slicerNormal;
+        }
         public SlicerRecord()
         {
             this.slicerCenter = new Vector3d();
@@ -286,6 +305,12 @@ namespace IsolineEditing
             }
             return r;
         }
+        public List<Lineindex> RebuildLineList()
+        {
+            for(int i = 0; i < lineList.Count; i++)
+               lineList[i] = new Lineindex(i, (i + 1) % (lineList.Count), lineList[i].fid);
+            return lineList;
+        }
         private double EvaluatePerimeter()
         {
             int numl = lineList.Count;
@@ -316,5 +341,82 @@ namespace IsolineEditing
             return (pointInfoList[0] - slicerCenter).Cross(pointInfoList[1] - slicerCenter);
         }
         
+    }
+    public class HalfSlicerRecord : SlicerRecord
+    {
+        public HalfSlicerRecord() { }
+        public HalfSlicerRecord(SlicerRecord slicer, int i1, int i2)
+        {
+            this.slicerNormal = slicer.slicerNormal;
+            if (i2 - i1 == slicer.pointInfoList.Count - 1)
+            {
+                this.pointInfoList = slicer.pointInfoList;
+                this.lineList = slicer.lineList;
+            }
+            else // normal
+            {
+                this.lineList = slicer.lineList.GetRange(i1, i2 - i1 + 1);  // 添加从i1开始的数据，一直添加到i2
+                this.pointInfoList = slicer.pointInfoList.GetRange(i1, i2 - i1 + 1);
+                if (i2 == slicer.pointInfoList.Count - 1) // 即最后一位的索引
+                {
+                    // add slicer fid and p
+                    this.pointInfoList.Add(new PointRecord(slicer.pointInfoList[0].p, slicer.lineList[0].fid));
+                }
+                else
+                {
+                    this.pointInfoList.Add(new PointRecord(slicer.pointInfoList[i2].p, slicer.lineList[i2].fid));
+                }
+                
+            }
+        }
+        public PointRecord GetFirstPoint() => pointInfoList[0];
+        public PointRecord GetLastPoint() => pointInfoList[pointInfoList.Count - 1];
+
+        public SlicerRecord CombineHalfSlicer(HalfSlicerRecord inHalfSlicer)  // 和 + 不同的是可能会遇见反向的序列
+        {
+            if (inHalfSlicer.lineList == null || this.lineList == null) return null;
+            int keyStartFI = pointInfoList[0].adjFF.ToArray()[0];
+            int keyEndFI = pointInfoList[pointInfoList.Count - 1].adjFF.ToArray()[0];
+            this.slicerNormal = (this.slicerNormal + inHalfSlicer.slicerNormal).Normalize();
+            this.slicerCenter = 0.5 * (this.pointInfoList[0].p + this.pointInfoList[pointInfoList.Count - 1].p);
+            if (keyEndFI == inHalfSlicer.pointInfoList[0].adjFF.ToArray()[0])  // head encounter
+            {
+                this.pointInfoList.RemoveAt(pointInfoList.Count - 1);
+                this.pointInfoList.AddRange(inHalfSlicer.pointInfoList);
+                this.lineList.AddRange(inHalfSlicer.lineList);
+                this.lineList = base.RebuildLineList();
+                this.pointInfoList.RemoveAt(pointInfoList.Count - 1);  // remove twice to make a slicerRecord
+                return this;
+            }
+            else if (keyStartFI == inHalfSlicer.pointInfoList[0].adjFF.ToArray()[0]) // need Reverse
+            {
+                this.pointInfoList.RemoveAt(pointInfoList.Count - 1);
+                this.pointInfoList.Reverse();
+                this.lineList.Reverse();
+                this.pointInfoList.AddRange(inHalfSlicer.pointInfoList);
+                this.lineList.AddRange(inHalfSlicer.lineList);
+                this.lineList = base.RebuildLineList();
+                this.pointInfoList.RemoveAt(pointInfoList.Count - 1);
+                return this;
+            }
+            else
+            {
+                throw new Exception("Slicer dont meet");
+                return null;
+            }
+            
+        }
+        public static HalfSlicerRecord operator+(HalfSlicerRecord h1, HalfSlicerRecord h2)
+        {
+            if (h1.lineList == null || h2.lineList == null) return null;
+            HalfSlicerRecord ret = new HalfSlicerRecord();
+            ret.slicerNormal = (h1.slicerNormal + h2.slicerNormal).Normalize();
+            ret.pointInfoList = new List<PointRecord>(h1.pointInfoList.GetRange(0,h1.pointInfoList.Count-1));
+            ret.pointInfoList.AddRange(h2.pointInfoList);
+            ret.lineList = new List<Lineindex>(h1.lineList);
+            ret.lineList.AddRange(h2.lineList);
+
+            return ret;
+        }
     }
 }

@@ -44,7 +44,6 @@ namespace System.Collections.Generic
 			items.Keys.CopyTo(arr, 0);
 			return arr;
 		}
-
 		#region IEnumerable<T> Members
 
 		public IEnumerator<T> GetEnumerator()
