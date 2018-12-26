@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows.Forms;
 using MyGeometry;
 using System.Diagnostics;
+using System.Linq;
 
 namespace IsolineEditing
 {
@@ -73,16 +74,26 @@ namespace IsolineEditing
             this.lineList = s1.lineList;
             this.lineList.Add(new Lineindex());
             this.lineList = RebuildLineList();
-            for(int i = 0; i < pointInfoList.Count; i++)
-            {
-                this.slicerCenter += pointInfoList[i].p / pointInfoList.Count;
-            }
+            this.slicerCenter = ComputeCenter();
             this.slicerNormal = s1.slicerNormal;
+            this.radius = EvaluateRadius();
         }
         public SlicerRecord()
         {
             this.slicerCenter = new Vector3d();
         }
+        public SlicerRecord(SlicerRecord ins1)
+        {
+            this.slicerNormal = ins1.slicerNormal;
+            this.slicerCenter = ins1.slicerCenter;
+            this.skeletonNodepos = ins1.skeletonNodepos;
+            this.radius = ins1.radius;
+            this.perimeter = ins1.perimeter;
+            this.pointInfoList = new List<PointRecord>(ins1.pointInfoList.ToArray());
+            this.lineList = new List<Lineindex>(ins1.lineList.ToArray());
+            
+        }
+
         public SlicerRecord(Mesh ms, Plane pl)     // using nearest-neighbour point method
         {
             this.slicerNormal = pl.nv;
@@ -283,7 +294,30 @@ namespace IsolineEditing
         /// <summary>
         ///  计算分片半径
         /// </summary>
-        private void ComputeCenter()
+        private Vector3d ComputeCenter()
+        {
+            if (pointInfoList == null) throw new Exception("check process of compute radius");
+            Vector3d areav = new Vector3d();
+            Vector3d xw = new Vector3d();
+            Vector3d yw = new Vector3d();
+            Vector3d zw = new Vector3d();
+            Vector3d a = pointInfoList[0].p;
+            
+            int nump = pointInfoList.Count;
+            for (int i = 1; i < nump-1; i++)
+            {
+                Vector3d triArea = (pointInfoList[i].p - a).Cross(pointInfoList[i + 1].p - a);
+                areav += triArea;
+                xw    += triArea * (a.x + pointInfoList[i].p.x + pointInfoList[i + 1].p.x) / 3;
+                yw    += triArea * (a.y + pointInfoList[i].p.y + pointInfoList[i + 1].p.y) / 3;
+                zw    += triArea * (a.z + pointInfoList[i].p.z + pointInfoList[i + 1].p.z) / 3;
+            }
+            slicerCenter = new Vector3d(xw.Normalize().Dot(areav.Normalize())*xw.Length() / areav.Length(),
+                                        yw.Normalize().Dot(areav.Normalize())*yw.Length() / areav.Length(),
+                                        zw.Normalize().Dot(areav.Normalize()) * zw.Length() / areav.Length());
+            return slicerCenter;
+        }
+        private Vector3d ComputeCenter2()
         {
             slicerCenter = new Vector3d(0, 0, 0);
             int nump = pointInfoList.Count;
@@ -291,13 +325,15 @@ namespace IsolineEditing
             {
                 slicerCenter += pointInfoList[i].p / nump;
             }
+            return slicerCenter;
         }
-        /// <summary>
-        /// 接口  用来返回半径
-        /// </summary>
-        /// <returns></returns>
-        private double EvaluateRadius()
+    /// <summary>
+    /// 接口  用来返回半径
+    /// </summary>
+    /// <returns></returns>
+    private double EvaluateRadius()
         {
+
             double r = 0.0;
             for (int i = 0; i < pointInfoList.Count; i++)
             {
@@ -402,7 +438,6 @@ namespace IsolineEditing
             else
             {
                 throw new Exception("Slicer dont meet");
-                return null;
             }
             
         }

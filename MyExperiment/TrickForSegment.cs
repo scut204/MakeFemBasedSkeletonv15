@@ -13,12 +13,15 @@ namespace IsolineEditing
     
     public static class TrickForSegment
     {
-        
         public static int torsoCutArmIndex;
         public static Plane chest;
         public static Plane navel;
         public static SlicerRecord leg0top = new SlicerRecord();
         public static SlicerRecord leg1top = new SlicerRecord();
+        public static SlicerRecord arm0top = new SlicerRecord();
+        public static SlicerRecord arm1top = new SlicerRecord();
+        public static SlicerRecord chestshoul = new SlicerRecord();
+
         public static SlicerRecordUniform ProjectOntoSlicer(Plane targetPlane, SlicerRecordUniform source, Vector3d projectRay)
         {
             List<Vector3d> lv = new List<Vector3d>();
@@ -77,6 +80,20 @@ namespace IsolineEditing
             }
             else outS = null;
         }
+        public static void BuildNewArmTopslicer(SlicerRecord ts,
+                                                SlicerRecord arms,
+                                                out SlicerRecord outS)
+        {
+            if(CreateTwoHalfSlicer(ts,arms,-(ts.slicerNormal + arms.slicerNormal).Normalize(),
+                                   out HalfSlicerRecord s1h, out HalfSlicerRecord armh))
+            {
+                outS = new SlicerRecord(armh);
+            }
+            else
+            {
+                outS = null;
+            }
+        }
         /// <summary>
         /// 创建半平面
         /// </summary>
@@ -114,6 +131,7 @@ namespace IsolineEditing
             }
             s1c = OutHalfSlicer(s1, guider, crossFiListRet);
             s2c = OutHalfSlicer(s2, guider, crossFiListRet);
+            if (s1c == null || s2c == null) return false;
             // s1c 处理
             ModifyTerminalPoint(s1c, crossFiListRet, intsecList);
             ModifyTerminalPoint(s2c, crossFiListRet, intsecList);
@@ -151,7 +169,7 @@ namespace IsolineEditing
                 if (commonFaceI.Contains(fid))
                 {
                     tempstart.Add(i);
-                    midmidp += 0.25 * (slicer.pointInfoList[i].p + slicer.pointInfoList[i + 1].p);
+                    midmidp += 0.25 * (slicer.pointInfoList[i].p + slicer.pointInfoList[(i + 1)%cnt].p);
                 }
             }
             start = tempstart[0];

@@ -143,7 +143,7 @@ namespace IsolineEditing
                 foreach (SlicerRecordUniform sru in radialSlicer) sru.lable = i;
                 DebugMethod.slicerUniformAll.Add(radialSlicer);
                 //DebugMethod.slicerAll.Add(slicerSeq);
-                WriteToSlicFile(radialSlicer, bdt);
+                //WriteToSlicFile(radialSlicer, bdt);
             }
         }
         private void AddtionCreateSlicer(List<SlicerRecord>[] bodySlicerGroup)
@@ -151,9 +151,20 @@ namespace IsolineEditing
             SlicerRecord bottomTorso = bodySlicerGroup[(int)bodypart.Torso].Last();
             SlicerRecord leg0top = bodySlicerGroup[(int)bodypart.Leg_0].First();
             SlicerRecord leg1top = bodySlicerGroup[(int)bodypart.Leg_1].First();
+            SlicerRecord arm0top = bodySlicerGroup[(int)bodypart.Arm_0].First();
+            SlicerRecord arm1top = bodySlicerGroup[(int)bodypart.Arm_1].First();
+            SlicerRecord chestshoul = TrickForSegment.chestshoul;
             TrickForSegment.BuildSeperateLimbSlicer(leg0top, leg1top, out SlicerRecord nLeg0, out SlicerRecord nLeg1);
+            TrickForSegment.BuildNewArmTopslicer(chestshoul, arm0top, out SlicerRecord nArm0);
+            TrickForSegment.BuildNewArmTopslicer(chestshoul, arm1top, out SlicerRecord nArm1);
+            GetMostMatchedArmSlicer(ref chestshoul,bodySlicerGroup[(int)bodypart.Arm_0][1],ref nArm0);
+            GetMostMatchedArmSlicer(ref chestshoul,bodySlicerGroup[(int)bodypart.Arm_1][1],ref nArm1);
+            bodySlicerGroup[(int)bodypart.Head][0] = new SlicerRecord(bodySlicerGroup[(int)bodypart.Torso][0]); // 将躯干的slicer置换到头部
+            bodySlicerGroup[(int)bodypart.Head][0].slicerNormal = -bodySlicerGroup[(int)bodypart.Head][0].slicerNormal;
             bodySlicerGroup[(int)bodypart.Leg_0][0] = nLeg0;
             bodySlicerGroup[(int)bodypart.Leg_1][0] = nLeg1;
+            bodySlicerGroup[(int)bodypart.Arm_0][0] = nArm0;
+            bodySlicerGroup[(int)bodypart.Arm_1][0] = nArm1;
             // add torso slicer
             TrickForSegment.BuildCombinedTorsoSlicer(leg0top, leg1top, out SlicerRecord torsoRoot);
             List<SlicerRecord> Torsoseq = new List<SlicerRecord>();
@@ -178,6 +189,36 @@ namespace IsolineEditing
             Torsoseq.Add(torsoRoot);
             bodySlicerGroup[(int)bodypart.Torso].AddRange(Torsoseq);
         }
+
+        private void GetMostMatchedArmSlicer(ref SlicerRecord chestshoul, SlicerRecord Aend, ref SlicerRecord nArm0)
+        {
+            double target = Math.Abs(Aend.radius - nArm0.radius);
+            SlicerRecord ret = null;
+            int currLoopTimes = 100;
+            Vector3d rootCentre = Aend.slicerCenter;
+            double currInterval = (rootCentre - nArm0.slicerCenter).Length() / currLoopTimes;
+            for (int i = 0; i < currLoopTimes; i++)
+            {
+                Vector3d refSkeNode = rootCentre + ((double)i / currLoopTimes) * (nArm0.slicerCenter - rootCentre);
+                Vector3d refNodeNormal0 = ((double)i / currLoopTimes) * Aend.slicerNormal +
+                                         (1 - (double)i / currLoopTimes) * nArm0.slicerNormal;
+                Plane nodePlane0 = new Plane(refSkeNode, refNodeNormal0);
+                SlicerRecord t1 = new SlicerRecord(segMesh, nodePlane0);
+                TrickForSegment.BuildNewArmTopslicer(chestshoul, t1, out SlicerRecord torsoIntp);
+                if(torsoIntp != null && Math.Abs(Aend.radius - torsoIntp.radius) < target)
+                {
+                    target = Math.Abs(Aend.radius - torsoIntp.radius);
+                    ret = torsoIntp;
+                }
+            }
+            if(ret != null)
+            {
+                nArm0 = ret;
+            }
+            
+        }
+
+
         //TODO:test unit
         private void SegmentToPart()
         {
@@ -630,7 +671,7 @@ namespace IsolineEditing
             int start;
             int outstart;
             DiffPrune(s, out start, out outstart);
-            s.RemoveRange(start, outstart);
+            s.RemoveRange(start, outstart-1);
         }
         /// <summary>
         /// 
@@ -665,6 +706,7 @@ namespace IsolineEditing
             //int outstart;
             DiffPrune(s, out start, out outstart);
             outstart = outstart - 1;
+            TrickForSegment.chestshoul = s[outstart];
             //s.RemoveRange(start, outstart);
         }
 
