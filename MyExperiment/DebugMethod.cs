@@ -158,7 +158,9 @@ namespace IsolineEditing
             for (int i = 0; i < sli.pointInfoList.Count; i++)
             {
                 GL.glPointSize(skeletonNodeSize);
-                GL.glColor3f(newcolor[0], newcolor[1], newcolor[2]);
+                GL.glColor3f(newcolor[0]*(float)i/ sli.pointInfoList.Count,
+                             newcolor[1]*(float)i / sli.pointInfoList.Count,
+                             newcolor[2]*(float)i / sli.pointInfoList.Count);
                 GL.glBegin(GL.GL_POINTS);
                 GL.glVertex3d(sli.pointInfoList[i].x, sli.pointInfoList[i].y, sli.pointInfoList[i].z);
                 GL.glEnd();

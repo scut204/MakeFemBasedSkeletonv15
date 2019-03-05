@@ -120,7 +120,7 @@ namespace IsolineEditing
             this.toolStripButtonExit});
             this.toolStrip1.Location = new System.Drawing.Point(3, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(532, 27);
+            this.toolStrip1.Size = new System.Drawing.Size(930, 27);
             this.toolStrip1.TabIndex = 2;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -220,7 +220,6 @@ namespace IsolineEditing
             this.toolStripButton2.Name = "toolStripButton2";
             this.toolStripButton2.Size = new System.Drawing.Size(151, 24);
             this.toolStripButton2.Text = "Extract Skeleton";
-            this.toolStripButton2.Visible = false;
             this.toolStripButton2.Click += new System.EventHandler(this.toolStripSplitButtonSkeletonization_ButtonClick);
             // 
             // toolStripButtonOpenSkeleton

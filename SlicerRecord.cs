@@ -72,7 +72,7 @@ namespace IsolineEditing
         {
             this.pointInfoList = s1.pointInfoList;
             this.lineList = s1.lineList;
-            this.lineList.Add(new Lineindex());
+            if(this.lineList.Count<this.pointInfoList.Count) this.lineList.Add(new Lineindex());
             this.lineList = RebuildLineList();
             this.slicerCenter = ComputeCenter();
             this.slicerNormal = s1.slicerNormal;

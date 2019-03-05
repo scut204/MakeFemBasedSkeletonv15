@@ -20,7 +20,7 @@ namespace IsolineEditing
         public static SlicerRecord leg1top = new SlicerRecord();
         public static SlicerRecord arm0top = new SlicerRecord();
         public static SlicerRecord arm1top = new SlicerRecord();
-        public static SlicerRecord chestshoul = new SlicerRecord();
+        public static SlicerRecord chestshoul = new SlicerRecord(); // 新的手臂生成方法应该不需要这个
 
         public static SlicerRecordUniform ProjectOntoSlicer(Plane targetPlane, SlicerRecordUniform source, Vector3d projectRay)
         {
@@ -84,14 +84,58 @@ namespace IsolineEditing
                                                 SlicerRecord arms,
                                                 out SlicerRecord outS)
         {
-            if(CreateTwoHalfSlicer(ts,arms,-(ts.slicerNormal + arms.slicerNormal).Normalize(),
+            outS = CreateTwoHalfSlicer(ts,arms,-(ts.slicerNormal + arms.slicerNormal).Normalize(),
+                                   out HalfSlicerRecord s1h, out HalfSlicerRecord armh)
+                ? new SlicerRecord(armh)
+                : null;
+        }
+        public static void BuildTorsoSlicerCutByArm(SlicerRecord ts,
+                                        SlicerRecord arms,
+                                        out SlicerRecord outS)
+        {
+            outS = CreateTwoHalfSlicer(ts, arms, -(ts.slicerNormal + arms.slicerNormal).Normalize(),
+                                   out HalfSlicerRecord s1h, out HalfSlicerRecord armh)
+                ? new SlicerRecord(s1h)
+                : ts;
+        }
+        public static void BuildTorsoWithArmCutting(List<SlicerRecord> torso, ref SlicerRecord armtop)
+        {
+            int state = 0;
+            SlicerRecord armtemp = null;
+            for(int i =0; i < torso.Count; i++)
+            {
+                
+                switch (state)
+                {
+                    case 0:
+                        {  // guide vector 用来控制
+                            if (CreateTwoHalfSlicer(torso[i], armtop, (torso[i].slicerNormal - armtop.slicerNormal).Normalize(),
                                    out HalfSlicerRecord s1h, out HalfSlicerRecord armh))
-            {
-                outS = new SlicerRecord(armh);
-            }
-            else
-            {
-                outS = null;
+                            {
+                                state++;
+                                torso[i] = new SlicerRecord(s1h);
+                                armtop = new SlicerRecord(armh);
+                            }
+                            break;
+                        }
+                    case 1:
+                        {
+                            if (CreateTwoHalfSlicer(torso[i], armtop, (-torso[i].slicerNormal - armtop.slicerNormal).Normalize(),
+                                out HalfSlicerRecord s1h, out HalfSlicerRecord armh))
+                            {
+                                torso[i] = new  SlicerRecord(s1h);
+                                armtemp = new  SlicerRecord(armh);
+                            }
+                            else
+                            {
+                                state++;
+                            }
+                            break;
+                        }
+                    case 2: { armtop = armtemp ==null? armtop:armtemp; return; }
+                }
+                   
+                
             }
         }
         /// <summary>
@@ -111,8 +155,8 @@ namespace IsolineEditing
             s2c = null;
             List<int> s1MeshList = new List<int>(s1.lineList.Select(l => l.fid));
             List<int> s2MeshList = new List<int>(s2.lineList.Select(l => l.fid));
-            List<int> crossFiList = new List<int>(s1MeshList.Intersect(s2MeshList));
-            if (crossFiList.Count < 2) return false;
+            List<int> crossFiList = new List<int>(s1MeshList.Intersect(s2MeshList));  // 这里求交叉面的原理是通过原mesh网格的信息
+            if (crossFiList.Count < 2) return false;    // 当交叉面小于2的时候则无交叉点
             List<int> crossFiListRet = new List<int>();
             List<Vector3d> intsecList = new List<Vector3d>();
             for (int i = 0; i < crossFiList.Count; i++)
@@ -160,7 +204,7 @@ namespace IsolineEditing
             int cnt = slicer.lineList.Count;
             int start = -1;
             int end = -1;
-            Vector3d midmidp = new Vector3d();
+            Vector3d midmidp = new Vector3d();  // 切面交线的中点
             List<int> tempstart = new List<int>();
             for (int i = 0; i < cnt; i++)  // 确定start与end两个交叉面的
             {
@@ -169,7 +213,7 @@ namespace IsolineEditing
                 if (commonFaceI.Contains(fid))
                 {
                     tempstart.Add(i);
-                    midmidp += 0.25 * (slicer.pointInfoList[i].p + slicer.pointInfoList[(i + 1)%cnt].p);
+                    midmidp += 0.25 * (slicer.pointInfoList[i].p + slicer.pointInfoList[(i + 1)%cnt].p);  // 取得交叉面两个点的中点的中点
                 }
             }
             start = tempstart[0];

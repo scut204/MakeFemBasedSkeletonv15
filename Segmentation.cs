@@ -108,13 +108,13 @@ namespace IsolineEditing
         public Segmentation(Skeletonizer skel, Mesh currmesh)
         {
             segMesh = currmesh;
-            int numSkSeq = 80; // 骨架的分段数量
+            int numSkSeq = 160; // 骨架的分段数量
             if (skel != null)
             {
                 skeRcd = skel.ReturnSkeleton(); // get skeleton from sig08
                 interval = (double)skeRcd.skeLength / numSkSeq;
                 SkeletonRefining(interval);   // refine
-                SegmentToPart();      //get partskelseq
+                SegmentToPart();      //get partskelseq 是关于骨架的操作
             }
         }
 
@@ -135,7 +135,9 @@ namespace IsolineEditing
             for (int i = 0; i < (int)bodypart.PartCount; i++)
             {
                 List<SlicerRecord> slicerSeq = bodySlicerGroup[i];
-                int n = (int)bodypart.Torso == i ? 40 : 10;
+                int n = (int)bodypart.Torso == i ? 30 :    //  密集 30 10 10 18
+                        (int)bodypart.Arm_0 == i ? 10 :  
+                        (int)bodypart.Arm_1 == i ? 10 : 18;
                 bodypart bdt = bdparr[i];
                 List<SlicerRecordUniform> radialSlicer = RadialSlicerCut(slicerSeq, n);
                 // TrickForSegment.PostEliminateChestGap(radialSlicer, bdparr[i]);
@@ -143,29 +145,43 @@ namespace IsolineEditing
                 foreach (SlicerRecordUniform sru in radialSlicer) sru.lable = i;
                 DebugMethod.slicerUniformAll.Add(radialSlicer);
                 //DebugMethod.slicerAll.Add(slicerSeq);
-                //WriteToSlicFile(radialSlicer, bdt);
+                WriteToSlicFile(radialSlicer, bdt);
             }
         }
-        private void AddtionCreateSlicer(List<SlicerRecord>[] bodySlicerGroup)
+        private void AddtionCreateSlicer(List<SlicerRecord>[] bodySlicerGroup)  // 增加大腿与手臂
         {
             SlicerRecord bottomTorso = bodySlicerGroup[(int)bodypart.Torso].Last();
             SlicerRecord leg0top = bodySlicerGroup[(int)bodypart.Leg_0].First();
             SlicerRecord leg1top = bodySlicerGroup[(int)bodypart.Leg_1].First();
-            SlicerRecord arm0top = bodySlicerGroup[(int)bodypart.Arm_0].First();
-            SlicerRecord arm1top = bodySlicerGroup[(int)bodypart.Arm_1].First();
+            
             SlicerRecord chestshoul = TrickForSegment.chestshoul;
             TrickForSegment.BuildSeperateLimbSlicer(leg0top, leg1top, out SlicerRecord nLeg0, out SlicerRecord nLeg1);
-            TrickForSegment.BuildNewArmTopslicer(chestshoul, arm0top, out SlicerRecord nArm0);
-            TrickForSegment.BuildNewArmTopslicer(chestshoul, arm1top, out SlicerRecord nArm1);
-            GetMostMatchedArmSlicer(ref chestshoul,bodySlicerGroup[(int)bodypart.Arm_0][1],ref nArm0);
-            GetMostMatchedArmSlicer(ref chestshoul,bodySlicerGroup[(int)bodypart.Arm_1][1],ref nArm1);
+
+            // Arm 
+            SlicerRecord arm0top = bodySlicerGroup[(int)bodypart.Arm_0].First();
+            SlicerRecord arm1top = bodySlicerGroup[(int)bodypart.Arm_1].First();
+            
+            //for(int i =0;i< bodySlicerGroup[(int)bodypart.Torso].Count; i++)
+            //{
+                TrickForSegment.BuildTorsoWithArmCutting(bodySlicerGroup[(int)bodypart.Torso], ref arm0top);
+                TrickForSegment.BuildTorsoWithArmCutting(bodySlicerGroup[(int)bodypart.Torso], ref arm1top);
+            bodySlicerGroup[(int)bodypart.Arm_0][0] = arm0top;
+            bodySlicerGroup[(int)bodypart.Arm_1][0] = arm1top;
+            //TrickForSegment.BuildTorsoSlicerCutByArm(torsoI, arm1top, out torsoI);
+            //bodySlicerGroup[(int)bodypart.Torso][i] = torsoI;
+            //}
+            //TrickForSegment.BuildNewArmTopslicer(chestshoul, arm0top, out SlicerRecord nArm0);
+            //TrickForSegment.BuildNewArmTopslicer(chestshoul, arm1top, out SlicerRecord nArm1);
+            //GetMostMatchedArmSlicer(ref chestshoul,bodySlicerGroup[(int)bodypart.Arm_0][1],ref nArm0);
+            //GetMostMatchedArmSlicer(ref chestshoul,bodySlicerGroup[(int)bodypart.Arm_1][1],ref nArm1);
+
+
             bodySlicerGroup[(int)bodypart.Head][0] = new SlicerRecord(bodySlicerGroup[(int)bodypart.Torso][0]); // 将躯干的slicer置换到头部
             bodySlicerGroup[(int)bodypart.Head][0].slicerNormal = -bodySlicerGroup[(int)bodypart.Head][0].slicerNormal;
             bodySlicerGroup[(int)bodypart.Leg_0][0] = nLeg0;
             bodySlicerGroup[(int)bodypart.Leg_1][0] = nLeg1;
-            bodySlicerGroup[(int)bodypart.Arm_0][0] = nArm0;
-            bodySlicerGroup[(int)bodypart.Arm_1][0] = nArm1;
-            // add torso slicer
+
+            // add torso slicer in the bottom of torso 
             TrickForSegment.BuildCombinedTorsoSlicer(leg0top, leg1top, out SlicerRecord torsoRoot);
             List<SlicerRecord> Torsoseq = new List<SlicerRecord>();
             Vector3d rootCentre = torsoRoot.slicerCenter;
@@ -190,6 +206,7 @@ namespace IsolineEditing
             bodySlicerGroup[(int)bodypart.Torso].AddRange(Torsoseq);
         }
 
+        // 被上面函数引用，用来计算手臂的slicer
         private void GetMostMatchedArmSlicer(ref SlicerRecord chestshoul, SlicerRecord Aend, ref SlicerRecord nArm0)
         {
             double target = Math.Abs(Aend.radius - nArm0.radius);
@@ -272,7 +289,6 @@ namespace IsolineEditing
                 loop++;
             }
         }
-        // TODO: test unit
         private void SkeletonDensify(double interval)  // 这里使用interval是为了保持密度均一
         {
             Set<int>[] initadj = new Set<int>[skeRcd.numSkeNode];
@@ -573,6 +589,12 @@ namespace IsolineEditing
         // 把这个当作主要的处理函数
         public void CreateSlicerSequence(bodypart bdt, double interval, out List<SlicerRecord> slicerSeq) 
         {
+            slicerSeq = new List<SlicerRecord>();
+            if (bdt == bodypart.Arm_0 || bdt == bodypart.Arm_1)
+            {
+                CreateArmSlicerSequence(bdt, interval, slicerSeq);
+                return;
+            }
             List<int> skeletonSeq = partSkelSeq[(int)bdt];
             #region compute interval: output pSkeLen
             double pSkeLen = 0.0;
@@ -582,7 +604,6 @@ namespace IsolineEditing
             }
             interval = pSkeLen / (Math.Floor(pSkeLen / interval)) + interval / 200;
             #endregion 
-            slicerSeq = new List<SlicerRecord>();
             Vector3d nodeNV ;
             Vector3d nodepos; 
             Plane nodePlane;
@@ -624,6 +645,109 @@ namespace IsolineEditing
             slicerSeq.Add(new SlicerRecord(segMesh, nodePlane));
             SlicerSeqPruning(ref slicerSeq, bdt);
         }
+        /// <summary>
+        /// 这个函数是用来对手臂上的分片进行特殊处理的，是CreateSlicerSequence的分支，后面还需要对躯干与手臂进行交叉
+        /// </summary>
+        /// <param name="bdt"></param>
+        /// <param name="interval"></param>
+        /// <param name="slicerSeq"></param>
+        private void CreateArmSlicerSequence(bodypart bdt,double interval, List<SlicerRecord> slicerSeq)
+        {
+            List<int> skeletonSeq = partSkelSeq[(int)bdt];
+            Vector3d torso2ArmDir = skeRcd.nodePosList[skeletonSeq[1]] - skeRcd.nodePosList[skeletonSeq[0]];  // 得到初始的法向量
+
+            Vector3d armEndDir    = skeRcd.nodePosList[skeletonSeq[skeletonSeq.Count - 1]] - skeRcd.nodePosList[skeletonSeq[skeletonSeq.Count -2]];  // 得到末端的法向量
+            #region get the length of skeleton and compute two intervals of relative slicer sknode.
+            double pSkeLen = 0.0;
+            for (int i = 0; i < skeletonSeq.Count - 1; i++)
+            {
+                pSkeLen += (skeRcd.nodePosList[skeletonSeq[i + 1]] - skeRcd.nodePosList[skeletonSeq[i]]).Length();
+            }
+            interval = pSkeLen / (Math.Floor(pSkeLen / interval)) + interval / 200;
+            double oxterInterval = interval / 5;  // 寻找腋窝的interval 细化
+            #endregion
+            //Vector3d nodeNV;
+            Vector3d nodepos;
+            Plane nodePlane;
+            List<KeyValuePair<int,int>> skeEndIndex = new List<KeyValuePair<int, int>>();
+            // 因为起点的slicer并不需要所以直接舍弃 
+            double globalPos = oxterInterval;  // 整个骨架序列线段中的位置
+            double skeLineAddup = 0.0;  // 单个骨架线中的位置
+            int skeLineIndex = 0;  // 骨架序列索引
+            do
+            {
+                int currStartIndex = 0;
+                int currEndIndex = 1;
+                double currLineLen = (skeRcd.nodePosList[1] - skeRcd.nodePosList[0]).Length();
+                for (; skeLineAddup < globalPos; skeLineIndex++)
+                {
+                    currStartIndex = skeletonSeq[skeLineIndex];
+                    currEndIndex = skeletonSeq[skeLineIndex + 1];
+                    currLineLen = (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]).Length();
+                    skeLineAddup += currLineLen;
+                }// 循环停止的结果：skeLineAddup>=globalPos skeLineIndex指向超过globalpos的那个线段
+                if (skeEndIndex.Count == 0  || currEndIndex != skeEndIndex.Last().Key)
+                {
+                    skeEndIndex.Add(new KeyValuePair<int, int>(currEndIndex,skeLineIndex-1));
+                    nodepos = (1 - (skeLineAddup - globalPos) / currLineLen) *
+                              (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]) +
+                              skeRcd.nodePosList[currStartIndex];
+                    //nodeNV = skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]; 这里注释了
+                    nodePlane = new Plane(nodepos, torso2ArmDir);
+                    slicerSeq.Add(new SlicerRecord(segMesh, nodePlane));
+                }
+                globalPos += oxterInterval;
+            } while (globalPos < pSkeLen);
+            // find oxter slicer 
+            Diff2rdPrune(slicerSeq, out int outstart);  // outstart 就是腋窝的index
+
+            // 进行手臂的分片生成
+            SlicerRecord temp = slicerSeq[outstart];
+            slicerSeq.Clear();
+            slicerSeq.Add(temp);
+            double armLength = 0.0;
+            for (int i = skeEndIndex[outstart].Value; i < skeletonSeq.Count - 1; i++)
+            {
+                armLength += (skeRcd.nodePosList[skeletonSeq[i + 1]] - skeRcd.nodePosList[skeletonSeq[i]]).Length();
+            }
+            double foreArmLength = armLength /2;
+            interval = armLength / (Math.Floor(armLength / interval)) + interval / 200;
+            Vector3d nodeNV;
+            globalPos = interval;  // 整个骨架序列线段中的位置
+            skeLineAddup = 0.0;  // 单个骨架线中的位置
+            skeLineIndex = skeEndIndex[outstart].Value;  // 骨架序列索引
+            do
+            {
+                int currStartIndex = skeletonSeq[skeLineIndex];
+                int currEndIndex = skeletonSeq[skeLineIndex + 1];
+                double currLineLen = (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]).Length();
+                for (; skeLineAddup < globalPos; skeLineIndex++)
+                {
+                    currStartIndex = skeletonSeq[skeLineIndex];
+                    currEndIndex = skeletonSeq[skeLineIndex + 1];
+                    currLineLen = (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]).Length();
+                    skeLineAddup += currLineLen;
+                }// 循环停止的结果：skeLineAddup>=globalPos skeLineIndex指向超过globalpos的那个线段
+                nodepos = (1 - (skeLineAddup - globalPos) / currLineLen) *
+                          (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]) +
+                          skeRcd.nodePosList[currStartIndex];
+                if (skeLineAddup < foreArmLength)
+                {
+                    nodeNV = (skeLineAddup * (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]) +
+                            (foreArmLength - skeLineAddup) * torso2ArmDir) / (foreArmLength); //这里注释了
+                }
+                else nodeNV = (skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]).Normalize();
+
+                nodePlane = new Plane(nodepos, nodeNV);
+                slicerSeq.Add(new SlicerRecord(segMesh, nodePlane));
+                globalPos += interval * (1 / nodeNV.Normalize().Dot((skeRcd.nodePosList[currEndIndex] - skeRcd.nodePosList[currStartIndex]).Normalize()));
+            } while (globalPos < armLength);
+            // final cut slicer 
+            nodeNV = skeRcd.nodePosList[skeletonSeq[skeletonSeq.Count - 1]] - skeRcd.nodePosList[skeletonSeq[skeletonSeq.Count - 2]];
+            nodePlane = new Plane(skeRcd.nodePosList[skeletonSeq.Last()], nodeNV);
+            slicerSeq.Add(new SlicerRecord(segMesh, nodePlane));
+        }
+
         /// <summary>
         /// 与 createsequence函数搭配使用，因此在s上不需要进行分割
         /// </summary>
@@ -699,6 +823,36 @@ namespace IsolineEditing
             }
             
         }
+        private static void Diff2rdPrune(List<SlicerRecord> s, out int outstart)
+        {
+            int numNd = s.Count;
+            int end = numNd;
+            int start = 1;
+            outstart = 1;
+            double maxRadiusInflation = double.MinValue;   // 二次偏导最大值
+            for (int i = start; i < end - 1; i++)
+            {
+                //if((s[i + 1].radius- s[i].radius)* (s[i].radius - s[i - 1].radius) < 0)
+                //{
+                //    outstart = i;
+                //    return;
+                //}
+                double radincr =  (s[i + 1].radius * s[i-1].radius) / (s[i].radius * s[i].radius);
+                if ((radincr - maxRadiusInflation) > 0)
+                {
+                    maxRadiusInflation = radincr;
+                    start = i;
+                }
+            }
+            // 这里找到增大的半径
+            for(int i = start;i<end - 1; i++)
+            {
+                if(s[i+1].radius -s[i].radius >0)
+                {
+                    outstart = i;return;
+                }
+            }
+        }
 
         private void TorsoSeqPrune(List<SlicerRecord> s, out int outstart)
         {
@@ -706,7 +860,7 @@ namespace IsolineEditing
             //int outstart;
             DiffPrune(s, out start, out outstart);
             outstart = outstart - 1;
-            TrickForSegment.chestshoul = s[outstart];
+            TrickForSegment.chestshoul = s[outstart]; // 这里是chestshoul 用来指定胸部位置
             //s.RemoveRange(start, outstart);
         }
 
@@ -736,25 +890,31 @@ namespace IsolineEditing
                 SlicerRecord tempSR = s[i];
                 Vector3d plcen = s[i].slicerCenter;
                 Vector3d slicernv = s[i].slicerNormal;
-                for(int k = 0 ;k < n;k++)
+
+                Vector3d radialSpinAx = new Vector3d(0, 0, 1);
+                double cost = radialSpinAx.Dot(slicernv);  // cost is cos(t)
+                //List<Vector3d> debugNormal = new List<Vector3d>();
+                for (int k = 0 ;k < n;k++)
                 {
                     double maxDist = double.MinValue;
-                    Vector3d maxOutP = new Vector3d();
-                    Vector3d radialRay = new Vector3d(Math.Sin(phi[k]), 0, Math.Cos(phi[k])) ;
-                    Vector3d radialSpinAx = new Vector3d(0, 1, 0);
-                    double cost = radialSpinAx.Dot(slicernv);
-                    Vector3d newRay = Vector3d.RotationRodriguesMethod(radialSpinAx.Cross(slicernv), radialRay, cost);
-                    Plane halfCutPlane = new Plane(plcen,slicernv.Cross(newRay));
+                    
+                    Vector3d radialRay = new Vector3d(Math.Cos(phi[k]), Math.Sin(phi[k]), 0) ;
+                    Vector3d radialPlaneNormal = new Vector3d(Math.Cos(phi[k]), 0, -Math.Sin(phi[k]));
+                    Vector3d newRay = Vector3d.RotationRodriguesMethod(radialSpinAx.Cross(slicernv), radialRay, cost).Normalize();
+                    Plane halfCutPlane = new Plane(plcen, newRay.Cross(slicernv));
+                    //debugNormal.Add(newRay);
                     //int dir = slicernv.Dot(new Vector3d(0, 1, 0)) > 0 ? 1 : -1;
+                    // 这个阶段是为了找到隔断的点
+                    Vector3d maxOutP = new Vector3d();
                     for (int j = 0; j < tempSR.lineList.Count; j++)
                     {
                         Vector3d p1 = tempSR.pointInfoList[tempSR.lineList[j].p1].p;
                         Vector3d p2 = tempSR.pointInfoList[tempSR.lineList[j].p2].p;
                         double tempP1Planedist = PointPlaneDistance(p1, halfCutPlane);
                         double tempP2Planedist = PointPlaneDistance(p2, halfCutPlane);
-                        if (tempP2Planedist * tempP1Planedist > 0) continue;
+                        if (tempP2Planedist * tempP1Planedist > 0) continue;  // 检测交叉
                         Vector3d outP = (p1 * Math.Abs(tempP2Planedist) + p2 * Math.Abs(tempP1Planedist)) / (Math.Abs(tempP1Planedist) + Math.Abs(tempP2Planedist));
-                        if ((outP - plcen).Dot(newRay) < 0) continue;
+                        if ((outP - plcen).Dot(newRay) < 0) continue;   // 检测射线方向
                         if ((outP - plcen).Length() > maxDist)
                         {
                             maxDist = (outP - plcen).Length();
@@ -816,6 +976,7 @@ namespace IsolineEditing
                 }
                 case bodypart.Head:
                 {
+                    osl.Reverse();
                     WriteToSlicFile_single(osl, currPath + "Head.txt"); break;
                 }
                 case bodypart.Torso:
@@ -831,9 +992,9 @@ namespace IsolineEditing
             {
                 int n = osl[0].pointInfoList.Count;
                 sw.WriteLine(n);
-                for (int i = 0; i < osl.Count; i++)
+                for (int i = osl.Count-1; i >= 0; i--)   // reverse to make from bottom to top
                 {
-                    for (int j = 0; j < n; j++)
+                    for (int j = n -1; j >= 0; j--) // reverse to make the detJ > 0
                     {
                         sw.Write(osl[i].pointInfoList[j].x.ToString() + " ");
                         sw.Write(osl[i].pointInfoList[j].y.ToString() + " ");

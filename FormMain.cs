@@ -427,7 +427,7 @@ namespace IsolineEditing
                 currentMeshRecord.Segmentation = new Segmentation(currentMeshRecord.Skeletonizer, currentMeshRecord.Mesh);
                 currentMeshRecord.Segmentation.SegPostProcess();
             }
-            PrintText("Saved hexa ... " );
+            PrintText("Saved hexa ... path find in WriteFile " );
         }
 
         private void toolStripButtonOpenSkeleton_Click(object sender, EventArgs e)

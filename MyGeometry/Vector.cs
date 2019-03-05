@@ -147,6 +147,7 @@ namespace MyGeometry
 			y = arr[index+1];
 			z = arr[index+2];
 		}
+        
         public static bool operator ==(Vector3d v1,Vector3d v2)
         {
             return v1.x != v2.x ? false :
@@ -201,7 +202,10 @@ namespace MyGeometry
         {
             //double cost = Math.Cos(angle);
             double sint = Math.Pow(1-cost * cost,0.5);
-            return v * cost + spinAxis.Cross(v) * sint + spinAxis * spinAxis.Dot(v) * (1 - cost);
+            spinAxis = spinAxis.Normalize();
+            return v * cost + 
+                   spinAxis.Cross(v) * sint + 
+                   spinAxis * spinAxis.Dot(v) * (1 - cost);
             
         }
 
