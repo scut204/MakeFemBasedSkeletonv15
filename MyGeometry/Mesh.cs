@@ -16,7 +16,7 @@ namespace MyGeometry
 		private double [] dualVertexPos  = null;
 		private byte   [] flag           = null;
 		private bool   [] isBoundary     = null;
-		private float  [] color          = null;
+		private float  [] color          = null;  // ÒÔ vertexCount×÷Îª
 		private int    [] singleVertexGroup = null;
 		private int [][] adjVV = null;
 		private int [][] adjVF = null;

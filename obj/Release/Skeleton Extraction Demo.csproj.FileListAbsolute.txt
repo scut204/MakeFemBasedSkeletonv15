@@ -70,3 +70,4 @@ W:\Csharp\W_csharp\Skeleton Extraction Demo 2017\obj\Release\Skeleton Extraction
 W:\Csharp\W_csharp\Skeleton Extraction Demo 2017\obj\Release\Skeleton Extraction Demo.csproj.CopyComplete
 W:\Csharp\W_csharp\Skeleton Extraction Demo 2017\obj\Release\Skeleton Extraction Demo.exe
 W:\Csharp\W_csharp\Skeleton Extraction Demo 2017\obj\Release\Skeleton Extraction Demo.pdb
+W:\Csharp\W_csharp\Skeleton Extraction Demo 2017\bin\Release\KdTreeLib.dll

@@ -6,6 +6,8 @@ using System.Windows.Forms;
 using MyGeometry;
 using System.Diagnostics;
 using System.IO;
+using KdTree;
+using KdTree.Math;
 namespace IsolineEditing
 {
     public struct ColorPoint
@@ -26,32 +28,87 @@ namespace IsolineEditing
             faceIndex = fi;
         }
     }
+    struct colorRGB
+    {
+        public int R;
+        public int G;
+        public int B;
+    }
     public class TemperatureProjection
     {
-        List<ColorPoint> inputcp;
-
+        List<ColorPoint> inputcp = null;
+        KdTree<double, float> skinTemperatureTree = new KdTree<double, float>(3, new DoubleMath());
         public TemperatureProjection(Mesh sh)
         {
             string path = "";
             ReadTemperatureResultFile(path);
-            GenerateProjectPoints(sh);
-            ComputeOriginalMeshColor(sh);      // 将产生的投射点与Mesh三点的距离作为权重
-            DisplayColoredModel();
+            //GenerateProjectPoints2(sh);
+            ComputeOriginalMeshColor2(sh);      // 将产生的投射点与Mesh三点的距离作为权重
+            DisplayColoredModel(sh);
         }
         private void ReadTemperatureResultFile(string path)
         {
             StreamReader sw = new StreamReader(path);
-
-
-
+            List<KdTreeNode<double, float>> treeNodeList = new List<KdTreeNode<double, float>>();
+            //KdTreeNode<double, float> treeNode = new KdTreeNode<double, float>();
+            while(!sw.EndOfStream)
+            {
+                string[] posColor = sw.ReadLine().Split(new char[] { ' ' });
+                double[] pos = new double[3] { Double.Parse(posColor[0]), Double.Parse(posColor[1]), Double.Parse(posColor[2]) };
+                treeNodeList.Add(new KdTreeNode<double, float>(pos, float.Parse(posColor[4])));
+            }
+            foreach (var node in treeNodeList)
+                skinTemperatureTree.Add(node.Point, node.Value);
 
             sw.Close();
         }
-        public void DisplayColoredModel()
+        //private void GenerateProjectPoints2(Mesh sh) { }
+        private void ComputeOriginalMeshColor2(Mesh sh)
         {
-            //throw new NotImplementedException();
+            if (sh == null) throw new Exception("mesh not create");
+            double[] vertexPos = sh.VertexPos;
+            for(int i = 0; i < sh.VertexCount; i++)
+            {
+                double[] currPoint = new double[3]{sh.VertexPos[i * 3    ],
+                                                   sh.VertexPos[i * 3 + 1],
+                                                   sh.VertexPos[i * 3 + 2] };
+                KdTreeNode<double, float>[] kNearestPoints = skinTemperatureTree.GetNearestNeighbours(currPoint, 1);
+                sh.Color[i] = (kNearestPoints[0].Value + kNearestPoints[1].Value )/ 2;
+            }
         }
 
+        public void DisplayColoredModel(Mesh sh)
+        {
+            List<float> color = new List<float>(sh.Color);
+            color.Sort();
+            float minColor = color[0];
+            float maxColor = color[color.Count - 1];
+            
+            colorRGB[] rgbList = new colorRGB[color.Count];
+            for(int i = 0; i < rgbList.Length; i++)
+            {
+                rgbList[i] = TemperatrueToRGB(minColor, maxColor, sh.Color[i]);
+            }
+
+        }
+        private colorRGB TemperatrueToRGB(float minColor, float maxColor, float value)
+        {
+            colorRGB ret;
+            float epsilon = float.Epsilon;
+            if (value >= (minColor + maxColor) / 2)
+            {
+                ret.B = 0;
+                ret.G = (int)(255 * (value - ((minColor + maxColor) / 2)) / ((maxColor - minColor) / 2 + epsilon));
+                ret.R = (int)(255 * (maxColor - value) / ((maxColor - minColor) / 2 + epsilon));
+            }
+            else
+            {
+                ret.R = 0;
+                ret.B = (int)(255 * (value - minColor) / ((maxColor - minColor) / 2 + epsilon));
+                ret.G = (int)(255 * (((minColor + maxColor) / 2) - value) / ((maxColor - minColor) / 2 + epsilon));
+            }
+            return ret;
+        }
         private void ComputeOriginalMeshColor(Mesh sh)
         {
             //this.color = new float[faceCount * 3]; Mesh的颜色结构与面相符合

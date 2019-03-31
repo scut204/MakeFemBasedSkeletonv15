@@ -108,7 +108,7 @@ namespace IsolineEditing
         public Segmentation(Skeletonizer skel, Mesh currmesh)
         {
             segMesh = currmesh;
-            int numSkSeq = 160; // 骨架的分段数量
+            int numSkSeq = 100; // 骨架的分段数量
             if (skel != null)
             {
                 skeRcd = skel.ReturnSkeleton(); // get skeleton from sig08
@@ -135,7 +135,7 @@ namespace IsolineEditing
             for (int i = 0; i < (int)bodypart.PartCount; i++)
             {
                 List<SlicerRecord> slicerSeq = bodySlicerGroup[i];
-                int n = (int)bodypart.Torso == i ? 30 :    //  密集 30 10 10 18
+                int n = (int)bodypart.Torso == i ? 20 :    //  密集 30 10 10 18
                         (int)bodypart.Arm_0 == i ? 10 :  
                         (int)bodypart.Arm_1 == i ? 10 : 18;
                 bodypart bdt = bdparr[i];
@@ -163,8 +163,8 @@ namespace IsolineEditing
             
             //for(int i =0;i< bodySlicerGroup[(int)bodypart.Torso].Count; i++)
             //{
-                TrickForSegment.BuildTorsoWithArmCutting(bodySlicerGroup[(int)bodypart.Torso], ref arm0top);
-                TrickForSegment.BuildTorsoWithArmCutting(bodySlicerGroup[(int)bodypart.Torso], ref arm1top);
+            TrickForSegment.BuildTorsoWithArmCutting(bodySlicerGroup[(int)bodypart.Torso], ref arm0top);
+            TrickForSegment.BuildTorsoWithArmCutting(bodySlicerGroup[(int)bodypart.Torso], ref arm1top);
             bodySlicerGroup[(int)bodypart.Arm_0][0] = arm0top;
             bodySlicerGroup[(int)bodypart.Arm_1][0] = arm1top;
             //TrickForSegment.BuildTorsoSlicerCutByArm(torsoI, arm1top, out torsoI);
@@ -654,7 +654,8 @@ namespace IsolineEditing
         private void CreateArmSlicerSequence(bodypart bdt,double interval, List<SlicerRecord> slicerSeq)
         {
             List<int> skeletonSeq = partSkelSeq[(int)bdt];
-            Vector3d torso2ArmDir = skeRcd.nodePosList[skeletonSeq[1]] - skeRcd.nodePosList[skeletonSeq[0]];  // 得到初始的法向量
+            int foreArmIndex = skeletonSeq.Count / 8 - 1;
+            Vector3d torso2ArmDir = skeRcd.nodePosList[skeletonSeq[foreArmIndex]] - skeRcd.nodePosList[skeletonSeq[0]];  // 得到初始的法向量
 
             Vector3d armEndDir    = skeRcd.nodePosList[skeletonSeq[skeletonSeq.Count - 1]] - skeRcd.nodePosList[skeletonSeq[skeletonSeq.Count -2]];  // 得到末端的法向量
             #region get the length of skeleton and compute two intervals of relative slicer sknode.
@@ -710,7 +711,7 @@ namespace IsolineEditing
             {
                 armLength += (skeRcd.nodePosList[skeletonSeq[i + 1]] - skeRcd.nodePosList[skeletonSeq[i]]).Length();
             }
-            double foreArmLength = armLength /2;
+            double foreArmLength = armLength/3*2;
             interval = armLength / (Math.Floor(armLength / interval)) + interval / 200;
             Vector3d nodeNV;
             globalPos = interval;  // 整个骨架序列线段中的位置
@@ -845,13 +846,14 @@ namespace IsolineEditing
                 }
             }
             // 这里找到增大的半径
-            for(int i = start;i<end - 1; i++)
+            for(int i = start;i<start + end / 10 ; i++)
             {
                 if(s[i+1].radius -s[i].radius >0)
                 {
                     outstart = i;return;
                 }
             }
+            outstart = start;  // 如果在短距离内没有找到极小点则将起始点认为是腋下点
         }
 
         private void TorsoSeqPrune(List<SlicerRecord> s, out int outstart)
@@ -890,15 +892,16 @@ namespace IsolineEditing
                 SlicerRecord tempSR = s[i];
                 Vector3d plcen = s[i].slicerCenter;
                 Vector3d slicernv = s[i].slicerNormal;
-
-                Vector3d radialSpinAx = new Vector3d(0, 0, 1);
+                // 这里的参考旋转轴需要实时改变，针对不同的模型，与下面的radiaRay变量搭配
+                // 可以使用3个轴的，也可以使用8个象限的旋转轴
+                Vector3d radialSpinAx = new Vector3d(0, 1, 0);
                 double cost = radialSpinAx.Dot(slicernv);  // cost is cos(t)
                 //List<Vector3d> debugNormal = new List<Vector3d>();
                 for (int k = 0 ;k < n;k++)
                 {
                     double maxDist = double.MinValue;
                     
-                    Vector3d radialRay = new Vector3d(Math.Cos(phi[k]), Math.Sin(phi[k]), 0) ;
+                    Vector3d radialRay = new Vector3d(Math.Cos(phi[k]), 0, Math.Sin(phi[k])) ;
                     Vector3d radialPlaneNormal = new Vector3d(Math.Cos(phi[k]), 0, -Math.Sin(phi[k]));
                     Vector3d newRay = Vector3d.RotationRodriguesMethod(radialSpinAx.Cross(slicernv), radialRay, cost).Normalize();
                     Plane halfCutPlane = new Plane(plcen, newRay.Cross(slicernv));
@@ -977,6 +980,10 @@ namespace IsolineEditing
                 case bodypart.Head:
                 {
                     osl.Reverse();
+                    for(int i = 0; i < osl.Count; i++)
+                    {
+                        osl[i].pointInfoList.Reverse();
+                    }
                     WriteToSlicFile_single(osl, currPath + "Head.txt"); break;
                 }
                 case bodypart.Torso:
